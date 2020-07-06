@@ -1,0 +1,10 @@
+{
+  "scriptFile": "app.py",
+  "bindings": [
+    {
+      "name": "req",
+      "type": "httpTrigger",
+      "direction": "in"
+    }
+  ]
+}

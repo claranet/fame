@@ -1,0 +1,96 @@
+{
+    "cumulative_counter": null,
+    "gauge": [
+        {
+            "metric": "azure.backups2",
+            "value": 0,
+            "dimensions": {
+                "vault_name": "jeremym-vaulttotest",
+                "vm_name": "az301exams",
+                "resource_group": "jeremym.rg"
+            }
+        },
+        {
+            "metric": "azure.backups2",
+            "value": 1,
+            "dimensions": {
+                "vault_name": "Unknown",
+                "vm_name": "bdu-dev-vm",
+                "resource_group": "run-bdu-dev-rg"
+            }
+        },
+        {
+            "metric": "azure.backups2",
+            "value": 1,
+            "dimensions": {
+                "vault_name": "Unknown",
+                "vm_name": "app-sandbox-rbeaufils-euw-sandbox-vm",
+                "resource_group": "sandbox-rbeaufils-sandbox-rg"
+            }
+        },
+        {
+            "metric": "azure.backups2",
+            "value": 1,
+            "dimensions": {
+                "vault_name": "Unknown",
+                "vm_name": "sfxlpi-vm",
+                "resource_group": "test-signalfx-laurent"
+            }
+        },
+        {
+            "metric": "azure.backups2",
+            "value": 1,
+            "dimensions": {
+                "vault_name": "Unknown",
+                "vm_name": "test-signalfx-laurent-vm",
+                "resource_group": "test-signalfx-laurent"
+            }
+        },
+        {
+            "metric": "azure.backups2",
+            "value": 1,
+            "dimensions": {
+                "vault_name": "Unknown",
+                "vm_name": "airone-test-mon",
+                "resource_group": "waner-test-indus-poc-rg"
+            }
+        },
+        {
+            "metric": "azure.backups2",
+            "value": 1,
+            "dimensions": {
+                "vault_name": "Unknown",
+                "vm_name": "demo-jose-vm01",
+                "resource_group": "demo-jose-dev-rg"
+            }
+        },
+        {
+            "metric": "azure.backups2",
+            "value": 1,
+            "dimensions": {
+                "vault_name": "Unknown",
+                "vm_name": "vm-alerting-01",
+                "resource_group": "demo-jose-dev-rg"
+            }
+        },
+        {
+            "metric": "azure.backups2",
+            "value": 1,
+            "dimensions": {
+                "vault_name": "Unknown",
+                "vm_name": "vm-alerting-02",
+                "resource_group": "demo-jose-dev-rg"
+            }
+        },
+        {
+            "metric": "azure.backups2",
+            "value": 1,
+            "dimensions": {
+                "vault_name": "Unknown",
+                "vm_name": "bastion-hub-indus-frc-sprint02-vm",
+                "resource_group": "hub-indus-sprint02-rg"
+            }
+        }
+    ],
+    "counter": null
+}
