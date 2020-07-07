@@ -9,8 +9,9 @@ from azure.keyvault.secrets import SecretClient
 from azure.loganalytics.models import QueryBody
 from azure.mgmt.compute import ComputeManagementClient
 from azure.mgmt.compute.models import VirtualMachine
-
+from azure import functions as func
 from ..shared.cred_wrapper import CredentialWrapper
+import datetime
 
 QUERY = 'AddonAzureBackupJobs | where TimeGenerated > ago(1d) | summarize arg_max(TimeGenerated,*) by JobUniqueId'
 
@@ -171,11 +172,17 @@ def send_backup_status_to_sfx(datas: dict, org_token: str, sfx_realm: str = 'eu0
         ingest.stop()
 
 
-def main(req):
+def main(timer: func.TimerRequest):
     logger = logging.getLogger()
+    utc_timestamp = datetime.datetime.utcnow().replace(
+        tzinfo=datetime.timezone.utc).isoformat()
 
+    if timer.past_due:
+        logging.info('The timer is past due!')
+
+    logging.info('Python timer trigger function ran at %s', utc_timestamp)
     org_token = get_token_from_keyvault('sfx-org-token')
-    subscription_id = os.environ.get('SUBSCRIPTION_ID', None)
+    subscription_id = os.environ.get('AZURE_SUBSCRIPTION_ID', None)
     workspace_id = os.environ.get('WORKSPACE_ID', None)
 
     logger.info('Get Analytic query')

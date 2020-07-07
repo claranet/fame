@@ -2,9 +2,10 @@
   "scriptFile": "app.py",
   "bindings": [
     {
-      "name": "req",
-      "type": "httpTrigger",
-      "direction": "in"
+      "name": "timer",
+      "type": "timerTrigger",
+      "direction": "in",
+      "schedule": "0 */9 * * * *"
     }
   ]
 }
