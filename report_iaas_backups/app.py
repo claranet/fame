@@ -2,23 +2,17 @@ import logging
 import os
 from typing import List, Tuple
 
+import requests
 import signalfx
-from azure.common.client_factory import get_azure_cli_credentials, get_client_from_cli_profile
 from azure.identity import ManagedIdentityCredential
 from azure.keyvault.secrets import SecretClient
-from azure.loganalytics.log_analytics_data_client import LogAnalyticsDataClient
 from azure.loganalytics.models import QueryBody
 from azure.mgmt.compute import ComputeManagementClient
 from azure.mgmt.compute.models import VirtualMachine
-import requests, urllib3, json
 
-QUERY = '''
-// All Successful Jobs
-// View all successful jobs in the selected time range.
-AddonAzureBackupJobs
-| where TimeGenerated > ago(1d)
-| summarize arg_max(TimeGenerated,*) by JobUniqueId
-'''
+from ..shared.cred_wrapper import CredentialWrapper
+
+QUERY = 'AddonAzureBackupJobs | where TimeGenerated > ago(1d) | summarize arg_max(TimeGenerated,*) by JobUniqueId'
 
 
 def get_token_from_keyvault(secret: str) -> str:
@@ -42,15 +36,15 @@ def get_token_from_keyvault(secret: str) -> str:
     return secret.value
 
 
-def get_sub_vms_list(subscription_id) -> List[VirtualMachine]:
+def get_sub_vms_list(subscription_id: str) -> List[VirtualMachine]:
+    """
+    Get all vms from the subscription
+    :param subscription_id: Id of the subscription
+    :type subscription_id: str
+    :return: List of VMs
     """
 
-    :return:
-    """
-    managed_identity_client_id = os.environ.get("MANAGED_IDENTITY_CLIENT_ID")
-
-    credentials = ManagedIdentityCredential(client_id=managed_identity_client_id)
-    # cli = get_client_from_cli_profile(ComputeManagementClient)
+    credentials = CredentialWrapper()
     cli = ComputeManagementClient(credentials, subscription_id)
     all_vms = cli.virtual_machines.list_all()
     vm_list = list()
@@ -63,27 +57,26 @@ def get_sub_vms_list(subscription_id) -> List[VirtualMachine]:
 def query_workspace(log_analytics_workspace_id: str, query_body: QueryBody) -> dict:
     """
     Launch a query to a LogAnalytics Workspace and return the result
-    :param subscription_id: Id of the subscription
     :param log_analytics_workspace_id: Id of the workspace to query
+    :type log_analytics_workspace_id: str
     :param query_body: The query to launch
-    :return: The query result as dict : { 'additional_properties': {}, 'tables': [azure.loganalytics.models.tables_py3.Table]
+    :type query_body: QueryBody
+    :return: The query result as a json
+    :rtype: str
+
     """
 
     managed_identity_client_id = os.environ.get("MANAGED_IDENTITY_CLIENT_ID")
-    # https://docs.microsoft.com/en-us/azure/developer/python/azure-sdk-authenticate?tabs=cmd
-    # See CredentialWrapper
-    # creds, _ = get_azure_cli_credentials(resource="https://api.loganalytics.io")
-    credentials = ManagedIdentityCredential(client_id=managed_identity_client_id, resource="https://api.loganalytics.io")
-    token = credentials.get_token("https://api.loganalytics.io").token
+    credentials = ManagedIdentityCredential(client_id=managed_identity_client_id,
+                                            resource="https://api.loganalytics.io/")
+    token = credentials.get_token("https://api.loganalytics.io/").token
 
-    query_headers = { 'Authorization': str(f'Bearer {token}'), 'Content-Type': 'application/json'}
+    query_headers = {'Authorization': str(f'Bearer {token}'), 'Content-Type': 'application/json'}
+
     url = f'https://api.loganalytics.io/v1/workspaces/{log_analytics_workspace_id}/query'
-    params = {'query': query_body}
+    params = {"query": query_body}
+    result = requests.post(url, json=params, headers=query_headers, verify=False)
 
-    result = requests.get(url, params=params, headers=query_headers, verify=False)
-    # data_cli = LogAnalyticsDataClient(credentials)
-    #
-    # result = data_cli.query(log_analytics_workspace_id, QueryBody(**{'query': query_body}))
     return result.json()
 
 
@@ -91,8 +84,11 @@ def not_backuped_vms(vms: List[VirtualMachine], backups_result: List[List[str]])
     """
     Check if vms are in the list of backuped vms
     :param vms: list of vms
+    :type vms: List[VirtualMachine]
     :param backups_result: List of backuped vms
+    :type backups_result: List[List[str]]
     :return: List of not backuped vms identified by resource_group_name and vm_name
+    :rtype: list
     """
 
     backuped_vms_name = [f'{";".join(x[8].split(";")[-2:]).lower()}' for x in backups_result]
@@ -109,6 +105,7 @@ def failed_and_success_backups(backups_result: List[List[str]]) -> Tuple[List[st
     depending their status.
     :param backups_result: List of backups
     :return: List of failed jobs and List of successfull jobs
+    :rtype: Tuple[List[str], List[str]]
     """
 
     failed_jobs = [{'rg': x[8].split(";")[-2].lower(), 'vm_name': x[8].split(";")[-1].lower(),
@@ -119,13 +116,17 @@ def failed_and_success_backups(backups_result: List[List[str]]) -> Tuple[List[st
     return failed_jobs, successful_jobs
 
 
-def send_backup_status_to_sfx(datas, org_token, sfx_realm='eu0'):
+def send_backup_status_to_sfx(datas: dict, org_token: str, sfx_realm: str = 'eu0') -> None:
     """
-
-    :param datas:
-    :param org_token:
-    :param sfx_realm:
-    :return:
+    Send backup status to SFX. If a VM is not found in the Backup Vault
+    the backup for this VM is considered as failed with vault_name to Unknown.
+    :param datas: Datas to send to SFX
+    :type datas: dict
+    :param org_token: SignalFx Organisation token
+    :type org_token: str
+    :param sfx_realm: SignalFx realm. Default to eu0
+    :type sfx_realm: str
+    :return: None
     """
 
     metric_name = "azure.backups"
@@ -162,7 +163,7 @@ def send_backup_status_to_sfx(datas, org_token, sfx_realm='eu0'):
                                  ]
 
     try:
-        logger.info("Send data to SignalFX")
+        logging.info("Send data to SignalFX")
         ingest.send(
             gauges=gauges_list
         )
@@ -179,6 +180,7 @@ def main(req):
 
     logger.info('Get Analytic query')
     rez = query_workspace(workspace_id, QUERY)
+
     backups_list = rez['tables'][0]['rows']
 
     vms_list = get_sub_vms_list(subscription_id)
@@ -191,7 +193,6 @@ def main(req):
                  }
 
     send_backup_status_to_sfx(bkp_datas, org_token)
-
 
 # if __name__ == "__main__":
 #     logger = logging.getLogger()
@@ -226,4 +227,3 @@ def main(req):
 #                  }
 #
 #     send_backup_status_to_sfx(bkp_datas, ORG_TOKEN)
-
