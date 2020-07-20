@@ -12,7 +12,7 @@ This repository hosts all stuff related to the monitoring of backup.
 
 ### Variables
 
-  * **AZURE_SUBSCRIPTION_ID**: The id of the subscription
+  * **BACKUPS_CONFIG**: This variable must be in json format: `[{ "subscription_id": xxxxxx, "analytics_workspace_id": xxxxxx}, { "subscription_id": xxxxxx, "analytics_workspace_id": xxxxxx}]`
   * **KEY_VAULT_URL**: Url of the Keyvault in which the sfx-org-token is hosted
   * **WORKSPACE_ID**: Id of the backup log analytics workspace
 
