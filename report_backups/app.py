@@ -25,6 +25,7 @@ QUERY = 'AddonAzureBackupJobs | where TimeGenerated > ago(1d) | where JobOperati
 class ExecutionError(Exception):
     pass
 
+
 def not_backuped_resources(azobjects: List[Union[VirtualMachine,
                                                  StorageAccount]],
                            backups_result: List[namedtuple]) -> List[dict]:
@@ -32,7 +33,7 @@ def not_backuped_resources(azobjects: List[Union[VirtualMachine,
     Check if vms are in the list of backuped vms
     :param azobjects: List of Azure Objects
     :type azobjects: List[VirtualMachine, StorageAccount]
-    :param backups_result: List of backuped vms
+    :param backups_result: List of backuped resources
     :type backups_result: List[List[str]]
     :return: List of not backuped vms identified by resource_group_name and vm_name
     :rtype: list
@@ -43,6 +44,15 @@ def not_backuped_resources(azobjects: List[Union[VirtualMachine,
 
     not_backuped = [{"rg": x.split(";")[-2], 'resource_name': x.split(";")[-1]} for x in azobjects_list if
                     x not in backuped_resources_name]
+
+    for item in not_backuped:
+        for azobj in azobjects:
+            if item['rg'] == azobj.id.split('/')[4].lower() and item['resource_name'] == azobj.name.lower():
+                if azobj.tags is not None:
+                    item['tags'] = azobj.tags
+                else:
+                    item['tags'] = {}
+
     return not_backuped
 
 
@@ -75,15 +85,9 @@ def main(timer: func.TimerRequest):
     if timer.past_due:
         logging.info('The timer is past due!')
 
-
-
     logging.info('Python timer trigger function ran at %s', utc_timestamp)
     org_token = get_secret_from_keyvault('sfx-org-token')
 
-    # TODO: Fix that. If we deploy this function on the support sub
-    #       we can't retrieve such informations from env vars.
-    # NOTES: Use the terraform archive provider to zip the function.
-    #       with template file to configure function.json.
     backups_configs = os.environ.get('BACKUPS_CONFIG', None)
     if backups_configs is not None:
         logger.info(json.loads(backups_configs))
@@ -95,7 +99,6 @@ def main(timer: func.TimerRequest):
     for config in backups_configs_list:
         try:
             # Try to do all stuff and raise error only at the end
-
             subscription_id = config["subscription_id"]
             workspace_id = config["analytics_workspace_id"]
             # Needed for cred_wrapper
@@ -117,7 +120,6 @@ def main(timer: func.TimerRequest):
             storages_list = get_sub_storages(subscription_id)
             azure_objects_list = vms_list + storages_list
 
-            logger.debug('Storages List: %s', storages_list)
             not_backuped = not_backuped_resources(azure_objects_list, backups_named_list)
 
             failed, success = failed_and_success_backups(backups_named_list)
@@ -147,12 +149,17 @@ def main(timer: func.TimerRequest):
 
             gauges_list = gauges_list + [{'metric': metric_name,
                                           'value': 1,
-                                          'dimensions': {'vault_name': x.get('vault_name', 'Unknown'),
-                                                         'resource_name': x.get('resource_name', ''),
-                                                         'resource_group': x.get('rg', '')
+                                          'dimensions': {**{'vault_name': x.get('vault_name', 'Unknown'),
+                                                            'resource_name': x.get('resource_name', ''),
+                                                            'resource_group': x.get('rg', '')
+                                                            },
+                                                         **dict(x.get('tags', dict()))
                                                          }
+
                                           } for x in bkp_datas.get('not_backuped')
                                          ]
+
+            print(gauges_list)
 
             send_status_to_sfx(org_token, gauges=gauges_list)
         except Exception as e:
@@ -162,4 +169,4 @@ def main(timer: func.TimerRequest):
                 raise ExecutionError("Failed to run the script due to %s", error_message)
             else:
                 # No output binding, so the function must return None in case of success
-                return None
+                return

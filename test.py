@@ -13,5 +13,7 @@ class Timer:
 
 if __name__ == '__main__':
     logger = logging.getLogger('report_backups')
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.DEBUG)
     logger.setLevel(logging.DEBUG)
     report(Timer)
