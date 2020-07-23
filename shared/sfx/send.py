@@ -3,7 +3,7 @@ from typing import List
 
 import signalfx
 
-logging.getLogger(__name__)
+logger = logging.getLogger('shared.sfx.send')
 
 
 def send_status_to_sfx(org_token: str,
@@ -38,7 +38,7 @@ def send_status_to_sfx(org_token: str,
     # TODO: Add resource_tags as dimention
 
     try:
-        logging.info("Send data to SignalFX")
+        logger.info("Send data to SignalFX")
         ingest.send(
             gauges=gauges,
             counters=counters,
@@ -46,8 +46,8 @@ def send_status_to_sfx(org_token: str,
         )
         return True
     except Exception as e:
-        logging.error('Failed to send metrics to SignalFx')
-        logging.debug('SignalFx Error message: %s', e)
+        logger.error('Failed to send metrics to SignalFx')
+        logger.debug('SignalFx Error message: %s', e)
         return False
     finally:
         ingest.stop()

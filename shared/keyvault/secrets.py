@@ -4,7 +4,7 @@ import os
 from azure.identity import ManagedIdentityCredential
 from azure.keyvault.secrets import SecretClient
 
-logging.getLogger(__name__)
+logger = logging.getLogger("shared.keyvault.secrets")
 
 
 def get_secret_from_keyvault(secret_name: str) -> str:
@@ -18,8 +18,8 @@ def get_secret_from_keyvault(secret_name: str) -> str:
 
     managed_identity_client_id = os.environ.get("MANAGED_IDENTITY_CLIENT_ID")
     key_vault_url = os.environ.get("KEY_VAULT_URL")
-    logging.info(f'Managed identity client id: {managed_identity_client_id}')
-    logging.info(f'Key vault url: {key_vault_url}')
+    logger.info(f'Managed identity client id: {managed_identity_client_id}')
+    logger.info(f'Key vault url: {key_vault_url}')
 
     credentials = ManagedIdentityCredential(client_id=managed_identity_client_id)
     key_vault_client = SecretClient(vault_url=key_vault_url, credential=credentials)

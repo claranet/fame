@@ -6,7 +6,7 @@ from azure.mgmt.storage.models import StorageAccount
 
 from ..cred_wrapper import CredentialWrapper
 
-logging.getLogger(__name__)
+logger = logging.getLogger("shared.storage")
 
 
 def get_sub_storages(subscription_id: str) -> List[StorageAccount]:
@@ -25,5 +25,5 @@ def get_sub_storages(subscription_id: str) -> List[StorageAccount]:
     stor_list = list()
     for x in all_stor:
         stor_list.append(x)
-    logging.debug('Full storages list: %s', stor_list)
+    logger.debug('Full storages list: %s', stor_list)
     return stor_list

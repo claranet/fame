@@ -6,7 +6,7 @@ from azure.mgmt.compute.models import VirtualMachine
 
 from ..cred_wrapper import CredentialWrapper
 
-logging.getLogger(__name__)
+logger = logging.getLogger("shared.vms")
 
 
 def get_sub_vms_list(subscription_id: str) -> List[VirtualMachine]:

@@ -5,7 +5,7 @@ import requests
 from azure.identity import ManagedIdentityCredential
 from azure.loganalytics.models import QueryBody
 
-logging.getLogger(__name__)
+logger = logging.getLogger("shared.loganalytics.workspace")
 
 
 def query(log_analytics_workspace_id: str, query_body: QueryBody) -> dict:

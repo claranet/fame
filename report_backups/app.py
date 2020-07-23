@@ -21,6 +21,8 @@ from collections import namedtuple
 QUERY = 'AddonAzureBackupJobs | where TimeGenerated > ago(1d) | where JobOperation == "Backup" | summarize arg_max(' \
         'TimeGenerated,*) by JobUniqueId '
 
+logger = logging.getLogger("report_backups")
+
 
 class ExecutionError(Exception):
     pass
@@ -56,11 +58,15 @@ def not_backuped_resources(azobjects: List[Union[VirtualMachine,
     return not_backuped
 
 
-def failed_and_success_backups(backups_result: List[namedtuple]) -> Tuple[List[str], List[str]]:
+def failed_and_success_backups(azureobjects: List[Union[List[VirtualMachine], List[StorageAccount]]],
+                               backups_result: List[namedtuple]) -> Tuple[List[str], List[str]]:
     """
     Check for failed and successful backups jobs and return vms name with RG
     depending their status.
+    :param azureobjects: List of all vms and storage accounts on Azure
+    :type azureobjects: List[Union[List[VirtualMachine], List[StorageAccount]]]
     :param backups_result: List of backups
+    :type backups_result: List[namedtuple]
     :return: List of failed jobs and List of successfull jobs
     :rtype: Tuple[List[str], List[str]]
     """
@@ -74,18 +80,33 @@ def failed_and_success_backups(backups_result: List[namedtuple]) -> Tuple[List[s
                         'vault_name': x.ResourceId.split('/')[-1].lower()} for x in backups_result if
                        x.JobFailureCode == "Success"]
 
+    # TODO: Improve this part of code.
+    for item in failed_jobs:
+        for azobj in azureobjects:
+            if item['rg'] == azobj.id.split('/')[4].lower() and item['resource_name'] == azobj.name.lower():
+                if azobj.tags is not None:
+                    item['tags'] = azobj.tags
+                else:
+                    item['tags'] = {}
+
+    for item in successful_jobs:
+        for azobj in azureobjects:
+            if item['rg'] == azobj.id.split('/')[4].lower() and item['resource_name'] == azobj.name.lower():
+                if azobj.tags is not None:
+                    item['tags'] = azobj.tags
+                else:
+                    item['tags'] = {}
     return failed_jobs, successful_jobs
 
 
 def main(timer: func.TimerRequest):
-    logger = logging.getLogger("report_backups")
     utc_timestamp = datetime.datetime.utcnow().replace(
         tzinfo=datetime.timezone.utc).isoformat()
 
     if timer.past_due:
-        logging.info('The timer is past due!')
+        logger.info('The timer is past due!')
 
-    logging.info('Python timer trigger function ran at %s', utc_timestamp)
+    logger.info('Python timer trigger function ran at %s', utc_timestamp)
     org_token = get_secret_from_keyvault('sfx-org-token')
 
     backups_configs = os.environ.get('BACKUPS_CONFIG', None)
@@ -122,7 +143,7 @@ def main(timer: func.TimerRequest):
 
             not_backuped = not_backuped_resources(azure_objects_list, backups_named_list)
 
-            failed, success = failed_and_success_backups(backups_named_list)
+            failed, success = failed_and_success_backups(azure_objects_list, backups_named_list)
 
             bkp_datas = {'success': success,
                          'failed': failed,
