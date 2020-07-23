@@ -154,18 +154,18 @@ def main(timer: func.TimerRequest):
 
             gauges_list = [{'metric': metric_name,
                             'value': 0,
-                            'dimensions': {'vault_name': x.get('vault_name', 'Unknown'),
-                                           'resource_name': x.get('resource_name', ''),
-                                           'resource_group': x.get('rg', '')
-                                           }
+                            'dimensions': {**{'vault_name': x.get('vault_name', 'Unknown'),
+                                              'resource_name': x.get('resource_name', ''),
+                                              'resource_group': x.get('rg', '')
+                                              }, **dict(x.get('tags', dict()))}
                             } for x in bkp_datas.get('success')]
 
             gauges_list = gauges_list + [{'metric': metric_name,
                                           'value': 1,
-                                          'dimensions': {'vault_name': x.get('vault_name', 'Unknown'),
-                                                         'resource_name': x.get('resource_name', ''),
-                                                         'resource_group': x.get('rg', '')
-                                                         }
+                                          'dimensions': {**{'vault_name': x.get('vault_name', 'Unknown'),
+                                                            'resource_name': x.get('resource_name', ''),
+                                                            'resource_group': x.get('rg', '')
+                                                            }, **dict(x.get('tags', dict()))}
                                           } for x in bkp_datas.get('failed')]
 
             gauges_list = gauges_list + [{'metric': metric_name,
@@ -180,7 +180,8 @@ def main(timer: func.TimerRequest):
                                           } for x in bkp_datas.get('not_backuped')
                                          ]
 
-            print(gauges_list)
+            import pprint
+            pprint.pprint(gauges_list)
 
             send_status_to_sfx(org_token, gauges=gauges_list)
         except Exception as e:
