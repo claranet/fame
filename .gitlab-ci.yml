@@ -7,10 +7,10 @@ package:
   image: debian:stable-slim
   script:
     - apt-get update && apt-get install -y nodejs npm python3 python3-pip
-    - npm i -g azure-functions-core-tools@3 jszip --unsafe-perm true
+    - npm i -g azure-functions-core-tools@3 jszip jszip-cli --unsafe-perm true
     - cd ${CI_PROJECT_DIR}
     - pip3 install -r requirements.txt --target="./.python_packages/lib/site-packages"
-    - jszip-cli -c .jsziprc.json
+    - jszip -c .jsziprc.json
   artifacts:
     paths:
       - functionapp.zip
