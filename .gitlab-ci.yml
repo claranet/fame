@@ -3,7 +3,7 @@ stages:
   - deploy
 
 package:
-  state: package
+  stage: package
   image: debian:stable-slim
   script:
     - apt-get update && apt-get install -y nodejs npm
