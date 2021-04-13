@@ -1,0 +1,3 @@
+AzureDiagnostics
+| where ResourceType == "APPLICATIONGATEWAYS" and OperationName == "ApplicationGatewayAccess"
+| summarize metric_value=dcount(instanceId_s) by timestamp=bin(TimeGenerated, 1m), azure_resource_name=Resource, azure_resource_group=ResourceGroup, subscription_id=SubscriptionId

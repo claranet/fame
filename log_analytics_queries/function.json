@@ -1,5 +1,6 @@
 {
   "scriptFile": "app.py",
+  "entryPoint": "run_timer",
   "bindings": [
     {
       "name": "timer",
