@@ -1,0 +1,22 @@
+---
+# Name of the metric to send to SIgnalFx
+metric_name: claranet.azure.application_gateway.instances
+# Type of metric, can be gauge, counter or cumulative_counter
+# See https://docs.signalfx.com/en/latest/metrics-metadata/metric-types.html
+metric_type: gauge
+# Query to run on Analytics Workspace
+# See https://docs.microsoft.com/en-us/azure/azure-monitor/logs/get-started-queries
+query: |
+    AddonAzureBackupJobs
+    | extend id_parts  = split(ResourceId, '/')
+    | extend subscription_id = id_parts[2]
+    | extend recovery_vault_name = id_parts[8]
+    | extend vm_parts = split(BackupItemUniqueId, ';')
+    | extend azure_resource_group_name = vm_parts[3]
+    | extend azure_resource_name = vm_parts[4]
+    | extend metric_value = iff(JobFailureCode == "Success", 1, 0)
+    | where TimeGenerated > ago(1d)
+    | where JobOperation == "Backup"
+    | where BackupManagementType == "IaaSVM"
+    | summarize arg_max(TimeGenerated,*) by JobUniqueId
+    | project timestamp=TimeGenerated, subscription_id, recovery_vault_name, azure_resource_group_name, azure_resource_name, metric_value
