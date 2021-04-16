@@ -4,9 +4,9 @@ stages:
 
 package:
   stage: package
-  image: debian:stable-slim
+  image: python:3.8-slim
   script:
-    - apt-get update && apt-get install -y nodejs npm python3 python3-pip zip
+    - apt-get update && apt-get install -y nodejs npm zip
     - npm i -g azure-functions-core-tools@3 --unsafe-perm true
     - cd ${CI_PROJECT_DIR}
     - pip3 install -r requirements.txt --target="./.python_packages/lib/site-packages"
