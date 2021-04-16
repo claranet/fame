@@ -1,5 +1,5 @@
 ---
-metric_name: claranet.azure.application_gateway.instances
+metric_name: claranet.azure.backup.vm
 metric_type: gauge
 query: |
     AddonAzureBackupJobs
