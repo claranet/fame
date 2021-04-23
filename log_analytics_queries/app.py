@@ -12,7 +12,6 @@ from dateutil.parser import parse
 from libs import credentials
 from libs import log_analytics
 
-
 logger = logging.getLogger("log_analytics_queries")
 log_level = logging.getLevelName(os.environ.get('LOG_LEVEL', logging.INFO))
 logger.setLevel(log_level)
@@ -56,7 +55,7 @@ def run():
     creds = credentials.get_credentials()
 
     extra_dimensions = {couple.split("=")[0]: couple.split("=")[1]
-                        for couple in os.environ.get('SFX_EXTRA_DIMENSIONS', '').split(",")
+                        for couple in os.environ.get('SFX_EXTRA_DIMENSIONS', '').split(",") if couple != ''
                         }
     logging.info(f"Extra signalFx dimensions: {extra_dimensions}")
 
@@ -82,6 +81,11 @@ def run():
 
             logger.debug(f"Executing query f{query_data['query']}")
             data = log_analytics.run_query(query_data['query'], log_analytics_workspace_id, creds)
+
+            if 'tables' not in data:
+                logger.warning(f"No result for the query {query_data['metric_name']}")
+                continue
+
             cols = [col['name'] for col in data['tables'][0]['columns']]
             try:
                 ix_timestamp = cols.index('timestamp')
@@ -95,11 +99,11 @@ def run():
                 timestamp = row.pop(ix_timestamp)
                 metric_value = row.pop(ix_metric_value - 1)
                 sfx_values.append({
-                        'metric': query_data.get('metric_name'),
-                        'value': metric_value,
-                        'timestamp': parse(timestamp).timestamp() * 1000,
-                        'dimensions': {**dict(zip(cols, row)), **extra_dimensions}
-                    })
+                    'metric': query_data.get('metric_name'),
+                    'value': metric_value,
+                    'timestamp': parse(timestamp).timestamp() * 1000,
+                    'dimensions': {**dict(zip(cols, row)), **extra_dimensions}
+                })
             sfx.send(**{f"{query_data.get('metric_type')}s": sfx_values})
 
 
