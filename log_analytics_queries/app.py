@@ -1,12 +1,11 @@
 import atexit
 import datetime
-import glob
 import logging
 import os
 
 import signalfx
-import yaml
 from azure import functions as func
+from azure.data.tables import TableClient
 from dateutil.parser import parse
 
 from libs import credentials
@@ -25,7 +24,9 @@ sfx_logger.addHandler(sh)
 
 
 def run_http():
-    pass
+    logger.warning('Triggering with HTTP endpoint')
+
+    run()
 
 
 def run_timer(timer: func.TimerRequest):
@@ -59,14 +60,27 @@ def run():
                         }
     logging.info(f"Extra signalFx dimensions: {extra_dimensions}")
 
+    storage_name = os.getenv('QUERIES_STORAGE_ACCOUNT_NAME')
+    storage_key = os.getenv('QUERIES_STORAGE_ACCOUNT_KEY')
+
+    if not storage_name and not storage_key:
+        storage_connection_string = os.getenv('AzureWebJobsStorage')
+        if not storage_connection_string:
+            raise ValueError("Either QUERIES_STORAGE_ACCOUNT_NAME and QUERIES_STORAGE_ACCOUNT_KEY or "
+                             "AzureWebJobsStorage environment variables must be set")
+    else:
+        storage_connection_string = f"DefaultEndpointsProtocol=https;AccountName={storage_name};" \
+                                    f"AccountKey={storage_key};" \
+                                    f"EndpointSuffix=core.windows.net"
+
+    table_name = os.getenv('QUERIES_STORAGE_TABLE_NAME') or 'LogQueries'
+    table_client = TableClient.from_connection_string(storage_connection_string, table_name=table_name)
     queries_config = []
-    for path in glob.glob(os.path.join(os.path.dirname(__file__), 'queries', '*.yaml')):
-        with open(path) as f:
-            data = yaml.safe_load(f)
-            if not data.get('metric_name', False) or not data.get('metric_type', False) or not data.get('query', False):
-                raise ValueError(f'Configuration file f{os.path.basename(path)} does not contain properties '
-                                 f'"metric_name", "metric_type" and "query')
-            queries_config.append(data)
+    for data in table_client.query_entities(""):
+        if not data.get('MetricName', False) or not data.get('MetricType', False) or not data.get('Query', False):
+            raise ValueError(f'Table {table_name} does not contain columns '
+                             f'"MetricName", "MetricType" and "Query')
+        queries_config.append(data)
 
     sfx_clt = signalfx.SignalFx(api_endpoint=f'https://api.{sfx_realm}.signalfx.com',
                                 ingest_endpoint=f'https://ingest.{sfx_realm}.signalfx.com',
@@ -77,13 +91,13 @@ def run():
 
         for query_data in queries_config:
             sfx_values = []
-            logger.info(f"Querying and sending metric {query_data['metric_name']}")
+            logger.info(f"Querying and sending metric {query_data['MetricName']}")
 
-            logger.debug(f"Executing query f{query_data['query']}")
-            data = log_analytics.run_query(query_data['query'], log_analytics_workspace_id, creds)
+            logger.debug(f"Executing query f{query_data['Query']}")
+            data = log_analytics.run_query(query_data['Query'], log_analytics_workspace_id, creds)
 
             if 'tables' not in data:
-                logger.warning(f"No result for the query {query_data['metric_name']}")
+                logger.warning(f"No result for the query {query_data['MetricName']}")
                 continue
 
             cols = [col['name'] for col in data['tables'][0]['columns']]
@@ -99,12 +113,12 @@ def run():
                 timestamp = row.pop(ix_timestamp)
                 metric_value = row.pop(ix_metric_value - 1)
                 sfx_values.append({
-                    'metric': query_data.get('metric_name'),
+                    'metric': query_data.get('MetricName'),
                     'value': metric_value,
                     'timestamp': parse(timestamp).timestamp() * 1000,
                     'dimensions': {**dict(zip(cols, row)), **extra_dimensions}
                 })
-            sfx.send(**{f"{query_data.get('metric_type')}s": sfx_values})
+            sfx.send(**{f"{query_data.get('MetricType')}s": sfx_values})
 
 
 if __name__ == "__main__":
