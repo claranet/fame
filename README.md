@@ -1,4 +1,4 @@
-# Claranet Log Analytics queries monitoring
+# Fame - Function for Azure Monitoring Extension
 
 This repository hosts an Azure Function App Python code in order to run Log Analytics queries and send result to 
 [Splunk Observability](https://www.splunk.com/en_us/observability.html) (formerly SignalFx). 
@@ -59,9 +59,3 @@ The others columns are treated as dimensions for the metric.
 You can use [Zip deployment](https://docs.microsoft.com/en-us/azure/azure-functions/deployment-zip-push), 
 [Azure Function Core Tools](https://docs.microsoft.com/en-us/azure/azure-functions/functions-run-local#publish) 
 or any other Azure deployment method to deploy this application.
-
-You can create the zip file with this command:
-```shell
-pip3 install -r requirements.txt --target="./.python_packages/lib/site-packages"
-zip -r my_function.zip .python_packages log_analytics_queries libs host.json
-```
