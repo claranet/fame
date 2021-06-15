@@ -24,7 +24,7 @@ sfx_logger.addHandler(sh)
 
 
 def run_http():
-    logger.warning('Triggering with HTTP endpoint')
+    logger.info('Triggering with HTTP endpoint')
 
     run()
 
@@ -51,6 +51,8 @@ def run():
     logging.info(f"SignalFx realm: {sfx_realm}")
 
     log_analytics_workspace_id = os.environ.get('LOG_ANALYTICS_WORKSPACE_GUID')
+    if not log_analytics_workspace_id:
+        raise ValueError("Environment variable LOG_ANALYTICS_WORKSPACE_GUID not set")
     logging.info(f"Log Analytics workspace id: {log_analytics_workspace_id}")
 
     creds = credentials.get_credentials()
@@ -100,15 +102,17 @@ def run():
                 logger.warning(f"No result for the query {query_data['MetricName']}")
                 continue
 
-            cols = [col['name'] for col in data['tables'][0]['columns']]
+            dimensions = [col['name'] for col in data['tables'][0]['columns']]
             try:
-                ix_timestamp = cols.index('timestamp')
-                ix_metric_value = cols.index('metric_value')
+                ix_timestamp = dimensions.index('timestamp')
+                ix_metric_value = dimensions.index('metric_value')
             except ValueError:
                 raise ValueError('Columns "timestamp" and "metric_value" must exist in the query results')
 
-            cols.pop(ix_timestamp)
-            cols.pop(ix_metric_value - 1)
+            # Remove timestamp & metrics_value from dimensions
+            dimensions.pop(ix_timestamp)
+            dimensions.pop(ix_metric_value - 1)
+
             for row in data['tables'][0]['rows']:
                 timestamp = row.pop(ix_timestamp)
                 metric_value = row.pop(ix_metric_value - 1)
@@ -116,7 +120,7 @@ def run():
                     'metric': query_data.get('MetricName'),
                     'value': metric_value,
                     'timestamp': parse(timestamp).timestamp() * 1000,
-                    'dimensions': {**dict(zip(cols, row)), **extra_dimensions}
+                    'dimensions': {**dict(zip(dimensions, row)), **extra_dimensions}
                 })
             sfx.send(**{f"{query_data.get('MetricType')}s": sfx_values})
 
