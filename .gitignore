@@ -1,4 +1,7 @@
+.venv/
 venv/
+.virtualenv/
+virtualenv/
 .python_packages/
 __pycache__
 local.settings.json

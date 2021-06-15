@@ -1,18 +1,18 @@
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+cache:
+  key: .gitlab-cache-pip
+  paths:
+    - .cache/pip
+
 stages:
-  - package
-  - deploy
+  - lint
 
-package:
-  stage: package
-  image: python:3.8-slim
+lint:
+  stage: lint
+  image: python:3.8
   script:
-    - apt-get update && apt-get install -y nodejs npm zip
-    - npm i -g azure-functions-core-tools@3 --unsafe-perm true
-    - cd ${CI_PROJECT_DIR}
-    - pip3 install -r requirements.txt --target="./.python_packages/lib/site-packages"
-    - zip -r functionapp.zip .python_packages report_backups shared host.json
-
-  artifacts:
-    paths:
-      - functionapp.zip
-    expire_in: 1 hour
+    - python -V
+    - pip3 install tox
+    - tox -e lint

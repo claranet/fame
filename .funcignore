@@ -1,2 +1,5 @@
+.venv/
 venv/
+.virtualenv/
+virtualenv/
 .python_packages/
