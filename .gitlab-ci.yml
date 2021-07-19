@@ -1,0 +1,18 @@
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+cache:
+  key: .gitlab-cache-pip
+  paths:
+    - .cache/pip
+
+stages:
+  - lint
+
+lint:
+  stage: lint
+  image: python:3.8
+  script:
+    - python -V
+    - pip3 install tox
+    - tox -e lint
