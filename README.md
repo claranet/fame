@@ -20,8 +20,8 @@ This repository hosts an Azure Function App Python code in order to run Log Anal
 
 ### Variables
 
-  * **QUERIES_STORAGE_ACCOUNT_NAME** (required): The name of the Storage Account containing the table with the queries
-  * **QUERIES_STORAGE_ACCOUNT_KEY** (required): The key to access the Storage Account containing the table with the queries, will try to fetch it if empty
+  * **QUERIES_STORAGE_ACCOUNT_NAME** (optional): The name of the Storage Account containing the table with the queries. If not set, use the `AzureWebJobsStorage` connection string.
+  * **QUERIES_STORAGE_ACCOUNT_KEY** (optional): The key to access the Storage Account containing the table with the queries, will try to fetch it if empty. If not set, use the `AzureWebJobsStorage` connection string.
   * **QUERIES_STORAGE_TABLE_NAME** (optional, defaults to `LogQueries`): The name of the table in the Storage Account with the queries
   * **SFX_TOKEN** (required): The Splunk Observability token for metric sending
   * **SFX_REALM** (optional, defaults to `eu0`): Splunk realm (region) to use for metric sending  
