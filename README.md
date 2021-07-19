@@ -3,6 +3,7 @@
 This repository hosts an Azure Function App Python code in order to run Log Analytics queries and send result to 
 [Splunk Observability](https://www.splunk.com/en_us/observability.html) (formerly SignalFx). 
 
+
 ## Pre-requisites
 
   * A Python 3.8 [Azure Function App](https://docs.microsoft.com/en-us/azure/azure-functions/functions-overview) 
@@ -15,6 +16,7 @@ This repository hosts an Azure Function App Python code in order to run Log Anal
     with at least `Log Analytics Reader` right on the Log Analytics Workspace and `Reader and Data Access` on the Storage Account if storage key is not provided.
   * A [Splunk Observability](https://www.observability.splunk.com/en_us/infrastructure-monitoring.html) account and its 
     associated [ingest Token](https://dev.splunk.com/observability/docs/administration/authtokens/#Organization-access-tokens)
+
 
 ### Variables
 
@@ -40,6 +42,7 @@ Log Analytics Workspace and send the result to Splunk Observability.
 Each query specifies the value of the metric and its associated time. Every column in the query is sent as metric 
 dimension along with the defined `EXTRA_DIMENSIONS` variable. 
 
+
 ### Table storage format
 
 The records in the Table STorage must have the following columns:
@@ -47,7 +50,8 @@ The records in the Table STorage must have the following columns:
  * **MetricType**: Type of metric, can be gauge, counter or cumulative_counter 
    (See [https://docs.signalfx.com/en/latest/metrics-metadata/metric-types.html](https://docs.signalfx.com/en/latest/metrics-metadata/metric-types.html))
  * **Query**: Query to run on the Log Analytics Workspace 
-   (See [https://docs.microsoft.com/en-us/azure/azure-monitor/logs/get-started-queries](See https://docs.microsoft.com/en-us/azure/azure-monitor/logs/get-started-queries))
+   (See [https://docs.microsoft.com/en-us/azure/azure-monitor/logs/get-started-queries](https://docs.microsoft.com/en-us/azure/azure-monitor/logs/get-started-queries))
+
 
 ### Log queries requirements
 
