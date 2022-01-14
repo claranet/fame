@@ -55,8 +55,10 @@ The records in the Table STorage must have the following columns:
 
 ### Log queries requirements
 
-The query must contain the columns `metric_value` with a metric value and `timespan` with the datetime of the metric to send.
-The others columns are treated as dimensions for the metric.
+The query must contain the columns `metric_value` with a metric value and `timestamp` with the datetime of the metric to send.
+The others columns must be strings and are treated as dimensions for the metric.
+
+You must specify a time range in your query to avoid retrieving and sending a huge amount of data.
 
 ## How to deploy
 
