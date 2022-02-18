@@ -134,9 +134,15 @@ def run():
             logger.info(f"Querying and sending metric {query_data['MetricName']}")
 
             logger.debug(f"Executing query f{query_data['Query']}")
-            data = log_analytics.run_query(
-                query_data["Query"], log_analytics_workspace_id, creds
-            )
+            try:
+                data = log_analytics.run_query(
+                    query_data["Query"], log_analytics_workspace_id, creds
+                )
+            except:
+                logger.exception(
+                    f"Error while running query for {query_data['MetricName']}"
+                )
+                continue
 
             if "tables" not in data:
                 logger.warning(f"No result for the query {query_data['MetricName']}")

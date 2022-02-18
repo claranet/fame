@@ -1,3 +1,11 @@
+# Unreleased
+
+Changed
+  * AZ-686: Allow sending other metrics when on query fails
+
+Fixed
+  * AZ-686: Fix authentication token scope for Log Analytics
+
 # v1.0.1 - 2022-01-14
 
 Changed
