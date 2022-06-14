@@ -17,7 +17,7 @@ def run_query(query, log_analytics_workspace_id, credentials):
     :param credentials: Azure credentials
     :return: a dict with the result of the query
     """
-    token = credentials.get_token("https://api.loganalytics.io/").token
+    token = credentials.get_token("https://api.loganalytics.io/.default").token
 
     query_headers = {
         "Authorization": str(f"Bearer {token}"),

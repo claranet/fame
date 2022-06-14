@@ -16,9 +16,10 @@ from dateutil.parser import parse
 
 from libs import credentials
 from libs import log_analytics
+from libs.log_analytics import LogAnalyticsException
 
 logger = logging.getLogger("log_analytics_queries")
-log_level = logging.getLevelName(os.environ.get("LOG_LEVEL", logging.INFO))
+log_level = os.environ.get("LOG_LEVEL", "INFO").upper()
 logger.setLevel(log_level)
 sh = logging.StreamHandler()
 sh.setLevel(log_level)
@@ -131,16 +132,22 @@ def run():
 
         for query_data in queries_config:
             sfx_values = []
-            logger.info(f"Querying and sending metric {query_data['MetricName']}")
+            metric_name = query_data.get("MetricName")
+            logger.info(f"Querying and sending metric {metric_name}")
 
             logger.debug(f"Executing query f{query_data['Query']}")
-            data = log_analytics.run_query(
-                query_data["Query"], log_analytics_workspace_id, creds
-            )
+            try:
+                data = log_analytics.run_query(
+                    query_data["Query"], log_analytics_workspace_id, creds
+                )
+            except LogAnalyticsException:
+                logger.exception(f"Error while running query for {metric_name}")
+                continue
 
             if "tables" not in data:
-                logger.warning(f"No result for the query {query_data['MetricName']}")
+                logger.warning(f"No result for the query {metric_name}")
                 continue
+            logger.debug("Found data for query")
 
             dimensions = [col["name"] for col in data["tables"][0]["columns"]]
             try:
@@ -150,6 +157,7 @@ def run():
                 raise ValueError(
                     'Columns "timestamp" and "metric_value" must exist in the query results'
                 )
+            logger.debug("Found `timestamp` and `metric_value` columns")
 
             # Remove timestamp & metrics_value from dimensions
             dimensions.pop(ix_timestamp)
@@ -158,18 +166,24 @@ def run():
             for row in data["tables"][0]["rows"]:
                 timestamp = row.pop(ix_timestamp)
                 metric_value = row.pop(ix_metric_value - 1)
+                metric_dimensions = {
+                    **dict(zip(dimensions, row)),
+                    **extra_dimensions,
+                }
                 sfx_values.append(
                     {
-                        "metric": query_data.get("MetricName"),
+                        "metric": metric_name,
                         "value": metric_value,
                         "timestamp": parse(timestamp).timestamp() * 1000,
-                        "dimensions": {
-                            **dict(zip(dimensions, row)),
-                            **extra_dimensions,
-                        },
+                        "dimensions": metric_dimensions,
                     }
                 )
+                logger.debug(
+                    f"Metric {metric_name} value: {parse(timestamp).isoformat()} - {metric_value}"
+                )
+                logger.debug(f"Metric {metric_name} dimensions: {metric_dimensions}")
             sfx.send(**{f"{query_data.get('MetricType')}s": sfx_values})
+            logger.info(f"Metric {query_data['MetricName']} successfully sent")
 
 
 if __name__ == "__main__":
