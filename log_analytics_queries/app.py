@@ -16,6 +16,7 @@ from dateutil.parser import parse
 
 from libs import credentials
 from libs import log_analytics
+from libs.log_analytics import LogAnalyticsException
 
 logger = logging.getLogger("log_analytics_queries")
 log_level = logging.getLevelName(os.environ.get("LOG_LEVEL", logging.INFO))
@@ -138,7 +139,7 @@ def run():
                 data = log_analytics.run_query(
                     query_data["Query"], log_analytics_workspace_id, creds
                 )
-            except:
+            except LogAnalyticsException:
                 logger.exception(
                     f"Error while running query for {query_data['MetricName']}"
                 )
