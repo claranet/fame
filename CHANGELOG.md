@@ -1,4 +1,4 @@
-# Unreleased
+# v1.1.0 - 2022-06-14
 
 Changed
   * AZ-686: Allow sending other metrics when on query fails
