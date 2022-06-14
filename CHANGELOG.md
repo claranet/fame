@@ -2,6 +2,7 @@
 
 Changed
   * AZ-686: Allow sending other metrics when on query fails
+  * AZ-686: Bump requirements
 
 Fixed
   * AZ-686: Fix authentication token scope for Log Analytics
