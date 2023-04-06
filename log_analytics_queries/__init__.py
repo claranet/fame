@@ -1,1 +1,0 @@
-"""Log Analytics queries package."""

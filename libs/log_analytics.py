@@ -39,4 +39,7 @@ def run_query(query, log_analytics_workspace_id, credentials):
             f"Error while querying Log Analytics {log_analytics_workspace_id}: {message}"
         )
 
-    return result.json()
+    res = result.json()
+    if "tables" not in res:
+        return []
+    return res["tables"][0]
