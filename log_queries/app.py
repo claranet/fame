@@ -1,7 +1,7 @@
 """
-Log Analytics queries function.
+Log queries function.
 
-Azure Function App function for running queries along a Log Analytics Workspace
+Azure Function App function for running queries along a Log Analytics Workspace or Resource Graph
 and send the result to Splunk Observability.
 """
 import atexit
@@ -16,9 +16,12 @@ from dateutil.parser import parse
 
 from libs import credentials
 from libs import log_analytics
-from libs.log_analytics import LogAnalyticsException
+from libs import resource_graph
 
-logger = logging.getLogger("log_analytics_queries")
+LOG_ANALYTICS_QUERY_TYPE = "log_analytics"
+RESOURCE_GRAPH_QUERY_TYPE = "resource_graph"
+
+logger = logging.getLogger("log_queries")
 log_level = os.environ.get("LOG_LEVEL", "INFO").upper()
 logger.setLevel(log_level)
 sh = logging.StreamHandler()
@@ -79,6 +82,11 @@ def run():
         raise ValueError("Environment variable LOG_ANALYTICS_WORKSPACE_GUID not set")
     logging.info(f"Log Analytics workspace id: {log_analytics_workspace_id}")
 
+    subscription_id = os.environ.get("SUBSCRIPTION_ID")
+    if not subscription_id:
+        raise ValueError("Environment variable SUBSCRIPTION_ID not set")
+    logging.info(f"Subscription ID: {subscription_id}")
+
     creds = credentials.get_credentials()
 
     extra_dimensions = {
@@ -133,23 +141,39 @@ def run():
         for query_data in queries_config:
             sfx_values = []
             metric_name = query_data.get("MetricName")
+            query_type = query_data.get("QueryType", LOG_ANALYTICS_QUERY_TYPE)
             logger.info(f"Querying and sending metric {metric_name}")
 
-            logger.debug(f"Executing query f{query_data['Query']}")
+            logger.debug(f"Executing query {query_data['Query']}")
             try:
-                data = log_analytics.run_query(
-                    query_data["Query"], log_analytics_workspace_id, creds
+                if query_type == RESOURCE_GRAPH_QUERY_TYPE:
+                    data = resource_graph.run_query(
+                        query_data["Query"], subscription_id, creds
+                    )
+                elif query_type == LOG_ANALYTICS_QUERY_TYPE:
+                    data = log_analytics.run_query(
+                        query_data["Query"], log_analytics_workspace_id, creds
+                    )
+                else:
+                    logger.exception(f"Unknown query type {query_type}")
+                    continue
+            except log_analytics.LogAnalyticsException:
+                logger.exception(
+                    f"Error while running Log Analytics query for {metric_name}"
                 )
-            except LogAnalyticsException:
-                logger.exception(f"Error while running query for {metric_name}")
+                continue
+            except resource_graph.ResourceGraphException:
+                logger.exception(
+                    f"Error while running Resource Graph query for {metric_name}"
+                )
                 continue
 
-            if "tables" not in data:
+            if len(data) == 0 or len(data["rows"]) == 0:
                 logger.warning(f"No result for the query {metric_name}")
                 continue
             logger.debug("Found data for query")
 
-            dimensions = [col["name"] for col in data["tables"][0]["columns"]]
+            dimensions = [col["name"] for col in data["columns"]]
             try:
                 ix_timestamp = dimensions.index("timestamp")
                 ix_metric_value = dimensions.index("metric_value")
@@ -163,7 +187,7 @@ def run():
             dimensions.pop(ix_timestamp)
             dimensions.pop(ix_metric_value - 1)
 
-            for row in data["tables"][0]["rows"]:
+            for row in data["rows"]:
                 timestamp = row.pop(ix_timestamp)
                 metric_value = row.pop(ix_metric_value - 1)
                 metric_dimensions = {

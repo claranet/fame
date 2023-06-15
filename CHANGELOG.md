@@ -1,3 +1,8 @@
+# Unreleased
+
+Added
+  * AZ-673: Resource graph querying support
+
 # v1.1.0 - 2022-06-14
 
 Changed
