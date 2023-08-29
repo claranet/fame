@@ -224,8 +224,6 @@ def run():
                 logger.exception(
                     f"Unexpected exception when treating query {metric_name or query_data}"
                 )
-            finally:
-                continue
 
 
 if __name__ == "__main__":
