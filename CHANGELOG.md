@@ -1,3 +1,9 @@
+# Unreleased
+
+Fixed
+  * AZ-1151: Fix bug related to `metric_value` and `timestamp` columns order
+  * AZ-1151: Fix execution stopping when metric related exception
+
 # v1.2.0 - 2023-06-15
 
 Added

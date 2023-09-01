@@ -58,7 +58,7 @@ def run_timer(timer: func.TimerRequest):
         datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).isoformat()
     )
 
-    logger.info("Python timer trigger function ran at %s", utc_timestamp)
+    logger.info(f"Python timer trigger function ran at {utc_timestamp}")
 
     run()
 
@@ -139,13 +139,17 @@ def run():
         atexit.register(sfx.stop)
 
         for query_data in queries_config:
-            sfx_values = []
-            metric_name = query_data.get("MetricName")
-            query_type = query_data.get("QueryType", LOG_ANALYTICS_QUERY_TYPE)
-            logger.info(f"Querying and sending metric {metric_name}")
-
-            logger.debug(f"Executing query {query_data['Query']}")
+            metric_name = None
             try:
+                sfx_values = []
+                metric_name = query_data.get("MetricName")
+                sfx_metric_type = query_data.get("MetricType")
+                query_type = query_data.get("QueryType", LOG_ANALYTICS_QUERY_TYPE)
+                logger.info(f"Querying and sending metric {metric_name}")
+
+                logger.debug(
+                    f"Executing query {query_data['Query']} for metric {metric_name}"
+                )
                 if query_type == RESOURCE_GRAPH_QUERY_TYPE:
                     data = resource_graph.run_query(
                         query_data["Query"], subscription_id, creds
@@ -155,59 +159,71 @@ def run():
                         query_data["Query"], log_analytics_workspace_id, creds
                     )
                 else:
-                    logger.exception(f"Unknown query type {query_type}")
+                    logger.error(
+                        f"Unknown query type {query_type} for metric {metric_name}"
+                    )
                     continue
+
+                if len(data) == 0 or len(data["rows"]) == 0:
+                    logger.warning(f"No result for metric {metric_name}")
+                    continue
+                logger.debug(f"Found data for metric {metric_name}")
+
+                dimensions = [col["name"] for col in data["columns"]]
+                if not ("timestamp" in dimensions and "metric_value" in dimensions):
+                    logger.error(
+                        f'Columns "timestamp" and "metric_value" do not exist '
+                        f"in the query results for metric {metric_name}"
+                    )
+                    continue
+                logger.debug(
+                    f"Found `timestamp` and `metric_value` columns for metric {metric_name}"
+                )
+
+                # Remove timestamp & metrics_value from dimensions
+                ix_timestamp = dimensions.index("timestamp")
+                dimensions.pop(ix_timestamp)
+                ix_metric_value = dimensions.index("metric_value")
+                dimensions.pop(ix_metric_value)
+
+                for row in data["rows"]:
+                    timestamp = row.pop(ix_timestamp)
+                    metric_value = row.pop(ix_metric_value)
+                    metric_dimensions = {
+                        # recreating map with keys (dimensions) and values (row)
+                        **dict(zip(dimensions, row)),
+                        **extra_dimensions,
+                    }
+                    sfx_values.append(
+                        {
+                            "metric": metric_name,
+                            "value": metric_value,
+                            "timestamp": parse(timestamp).timestamp() * 1000,
+                            "dimensions": metric_dimensions,
+                        }
+                    )
+                    logger.debug(
+                        f"Metric {metric_name} time: {parse(timestamp).isoformat()}"
+                    )
+                    logger.debug(f"Metric {metric_name} value: {metric_value}")
+                    logger.debug(
+                        f"Metric {metric_name} dimensions: {metric_dimensions}"
+                    )
+
+                sfx.send(**{f"{sfx_metric_type}s": sfx_values})
+                logger.info(f"Metric {metric_name} successfully sent")
             except log_analytics.LogAnalyticsException:
                 logger.exception(
                     f"Error while running Log Analytics query for {metric_name}"
                 )
-                continue
             except resource_graph.ResourceGraphException:
                 logger.exception(
                     f"Error while running Resource Graph query for {metric_name}"
                 )
-                continue
-
-            if len(data) == 0 or len(data["rows"]) == 0:
-                logger.warning(f"No result for the query {metric_name}")
-                continue
-            logger.debug("Found data for query")
-
-            dimensions = [col["name"] for col in data["columns"]]
-            try:
-                ix_timestamp = dimensions.index("timestamp")
-                ix_metric_value = dimensions.index("metric_value")
-            except ValueError:
-                raise ValueError(
-                    'Columns "timestamp" and "metric_value" must exist in the query results'
+            except:  # noqa E722
+                logger.exception(
+                    f"Unexpected exception when treating query {metric_name or query_data}"
                 )
-            logger.debug("Found `timestamp` and `metric_value` columns")
-
-            # Remove timestamp & metrics_value from dimensions
-            dimensions.pop(ix_timestamp)
-            dimensions.pop(ix_metric_value - 1)
-
-            for row in data["rows"]:
-                timestamp = row.pop(ix_timestamp)
-                metric_value = row.pop(ix_metric_value - 1)
-                metric_dimensions = {
-                    **dict(zip(dimensions, row)),
-                    **extra_dimensions,
-                }
-                sfx_values.append(
-                    {
-                        "metric": metric_name,
-                        "value": metric_value,
-                        "timestamp": parse(timestamp).timestamp() * 1000,
-                        "dimensions": metric_dimensions,
-                    }
-                )
-                logger.debug(
-                    f"Metric {metric_name} value: {parse(timestamp).isoformat()} - {metric_value}"
-                )
-                logger.debug(f"Metric {metric_name} dimensions: {metric_dimensions}")
-            sfx.send(**{f"{query_data.get('MetricType')}s": sfx_values})
-            logger.info(f"Metric {query_data['MetricName']} successfully sent")
 
 
 if __name__ == "__main__":
