@@ -1,4 +1,4 @@
-# Unreleased
+# v1.2.1 - 2023-09-01
 
 Fixed
   * AZ-1151: Fix bug related to `metric_value` and `timestamp` columns order
