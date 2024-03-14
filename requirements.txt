@@ -36,7 +36,7 @@ cryptography==3.4.8
     #   pyjwt
 idna==2.10
     # via requests
-isodate==0.6.0
+isodate==0.6.1
     # via msrest
 msal==1.11.0
     # via
