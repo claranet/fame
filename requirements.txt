@@ -42,7 +42,7 @@ msal==1.11.0
     # via
     #   azure-identity
     #   msal-extensions
-msal-extensions==0.3.0
+msal-extensions==0.3.1
     # via azure-identity
 msrest==0.6.21
     # via
