@@ -4,7 +4,7 @@
 #
 #    pip-compile
 #
-azure-common==1.1.27
+azure-common==1.1.28
     # via azure-loganalytics
 azure-core==1.14.0
     # via
