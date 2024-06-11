@@ -41,7 +41,7 @@ isodate==0.6.1
     # via
     #   azure-data-tables
     #   msrest
-msal==1.28.0
+msal==1.28.1
     # via
     #   azure-identity
     #   msal-extensions
