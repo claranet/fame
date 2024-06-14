@@ -19,7 +19,7 @@ azure-identity==1.15.0
     # via -r requirements.in
 azure-loganalytics==0.1.1
     # via -r requirements.in
-certifi==2024.2.2
+certifi==2024.6.2
     # via
     #   msrest
     #   requests
