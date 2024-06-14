@@ -33,7 +33,7 @@ cryptography==42.0.8
     #   azure-identity
     #   msal
     #   pyjwt
-idna==3.6
+idna==3.7
     # via
     #   requests
     #   yarl
