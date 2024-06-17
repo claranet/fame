@@ -94,7 +94,7 @@ typing-extensions==4.12.2
     # via
     #   azure-core
     #   azure-data-tables
-urllib3==2.2.1
+urllib3==2.2.2
     # via
     #   requests
     #   signalfx
