@@ -1,4 +1,5 @@
 """Azure Log Analytics management."""
+
 import requests
 
 
@@ -36,7 +37,7 @@ def run_query(query, log_analytics_workspace_id, credentials):
         except:  # noqa E722
             message = result.text
         raise LogAnalyticsException(
-            f"Error while querying Log Analytics {log_analytics_workspace_id}: {message}"
+            f"Error while querying Log Analytics {log_analytics_workspace_id}: {message}",
         )
 
     res = result.json()

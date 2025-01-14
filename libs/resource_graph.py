@@ -1,4 +1,5 @@
 """Azure Resource Graph management."""
+
 import requests
 
 
