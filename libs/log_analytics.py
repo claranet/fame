@@ -14,7 +14,7 @@ def run_query(query, log_analytics_workspace_id, credentials):
     Run a query within a given Log Analytics Workspace.
 
     :param query: Kusto query to run
-    :param log_analytics_workspace_id: GUID of the Log Analatycs workspace
+    :param log_analytics_workspace_id: GUID of the Log Analytics workspace
     :param credentials: Azure credentials
     :return: a dict with the result of the query
     """
@@ -42,5 +42,5 @@ def run_query(query, log_analytics_workspace_id, credentials):
 
     res = result.json()
     if "tables" not in res:
-        return []
+        return {}
     return res["tables"][0]

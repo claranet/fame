@@ -44,11 +44,11 @@ repos:
       - id: add-trailing-comma
         stages: [pre-commit]
 
-  - repo: https://github.com/RobertCraigie/pyright-python
-    rev: v1.1.391
-    hooks:
-      - id: pyright
-        stages: [pre-commit]
+#  - repo: https://github.com/RobertCraigie/pyright-python
+#    rev: v1.1.391
+#    hooks:
+#      - id: pyright
+#        stages: [pre-commit]
 
   - repo: https://github.com/tox-dev/tox-ini-fmt
     rev: "1.4.1"

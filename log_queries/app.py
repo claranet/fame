@@ -116,7 +116,8 @@ def run():
 
     table_name = os.getenv("QUERIES_STORAGE_TABLE_NAME") or "LogQueries"
     table_client = TableClient.from_connection_string(
-        storage_connection_string, table_name=table_name,
+        storage_connection_string,
+        table_name=table_name,
     )
     queries_config = []
     for data in table_client.query_entities(""):
@@ -153,11 +154,15 @@ def run():
                 )
                 if query_type == RESOURCE_GRAPH_QUERY_TYPE:
                     data = resource_graph.run_query(
-                        query_data["Query"], subscription_id, creds,
+                        query_data["Query"],
+                        subscription_id,
+                        creds,
                     )
                 elif query_type == LOG_ANALYTICS_QUERY_TYPE:
                     data = log_analytics.run_query(
-                        query_data["Query"], log_analytics_workspace_id, creds,
+                        query_data["Query"],
+                        log_analytics_workspace_id,
+                        creds,
                     )
                 else:
                     logger.error(
