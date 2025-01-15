@@ -9,18 +9,26 @@ jobs:
   build:
     name: Upload Release Asset
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10"]
     steps:
-      - name: Checkout code
+      - name: "Checkout code"
         uses: actions/checkout@v4
-      - name: Create ZIP file
+      - name: "Set up Python ${{ matrix.python-version }}"
+        uses: actions/setup-python@v4
+        with:
+          python-version: "${{ matrix.python-version }}"
+      - name: "Create ZIP file"
         run: |
+          python -V
           sudo npm i -g azure-functions-core-tools@4 --unsafe-perm true
           pipx install poetry==1.8.5
           poetry self add poetry-plugin-export==1.8.0
           poetry export --without-hashes > src/requirements.txt
           cd src
           func pack --build-native-deps --python -o fame
-      - name: Create Release
+      - name: "Create Release"
         id: create_release
         uses: actions/create-release@v1
         env:
@@ -30,13 +38,14 @@ jobs:
           release_name: Release ${{ github.ref }}
           draft: false
           prerelease: false
-      - name: Upload Release Asset
+      - name: "Upload Release asset"
         id: upload-release-asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
+          # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ./src/fame.zip
           asset_name: fame.zip
           asset_content_type: application/zip

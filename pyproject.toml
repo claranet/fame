@@ -6,7 +6,7 @@ authors = ["Claranet <do-not-reply@claranet.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = "^3.10"
 azure-data-tables = "^12.0.0b7"
 azure-functions = "^1.7.0"
 azure-identity = "^1.5.0"
