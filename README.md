@@ -6,7 +6,7 @@ send result to [Splunk Observability](https://www.splunk.com/en_us/observability
 
 ## Pre-requisites
 
-* A Python 3.8 [Azure Function App](https://docs.microsoft.com/en-us/azure/azure-functions/functions-overview)
+* A Python 3.10 [Azure Function App](https://docs.microsoft.com/en-us/azure/azure-functions/functions-overview)
 * A [Log Analytics Workspace](https://docs.microsoft.com/en-us/azure/azure-monitor/logs/log-analytics-overview)
 with resources [Diagnostic Settings](https://docs.microsoft.com/en-us/azure/azure-monitor/essentials/diagnostic-settings?tabs=CMD)
 linked to it
@@ -51,7 +51,7 @@ dimension along with the defined `EXTRA_DIMENSIONS` variable.
 
 ### Table storage format
 
-The records in the Table STorage must have the following columns:
+The records in the Table Storage must have the following columns:
 * **MetricName**: Name of the metric to send to Splunk Observability
 * **MetricType**: Type of metric, can be gauge, counter or cumulative_counter
     (See [https://docs.signalfx.com/en/latest/metrics-metadata/metric-types.html](https://docs.signalfx.com/en/latest/metrics-metadata/metric-types.html))
