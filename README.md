@@ -1,12 +1,13 @@
 # Fame - Function for Azure Monitoring Extension
 
 This repository hosts an Azure Function App Python code in order to run Log Analytics and Resource Graph queries and
-send result to [Splunk Observability](https://www.splunk.com/en_us/observability.html) (formerly SignalFx).
+send results to [Splunk Observability](https://www.splunk.com/en_us/observability.html) (formerly SignalFx) or
+[Datadog](https://www.datadoghq.com/).
 
 
 ## Pre-requisites
 
-* A Python 3.10 [Azure Function App](https://docs.microsoft.com/en-us/azure/azure-functions/functions-overview)
+* A Python 3.12 [Azure Function App](https://docs.microsoft.com/en-us/azure/azure-functions/functions-overview)
 * A [Log Analytics Workspace](https://docs.microsoft.com/en-us/azure/azure-monitor/logs/log-analytics-overview)
 with resources [Diagnostic Settings](https://docs.microsoft.com/en-us/azure/azure-monitor/essentials/diagnostic-settings?tabs=CMD)
 linked to it
@@ -16,8 +17,10 @@ linked to it
     with at least `Log Analytics Reader` right on the Log Analytics Workspace for Log Analytics queries, `Reader` on the
     subscription for the Resource Graph for Resource Graph queries and `Reader and Data Access` on the Storage Account if
     storage key is not provided.
-* A [Splunk Observability](https://www.observability.splunk.com/en_us/infrastructure-monitoring.html) account and its
-    associated [ingest Token](https://dev.splunk.com/observability/docs/administration/authtokens/#Organization-access-tokens)
+* Either:
+    * A [Splunk Observability](https://www.observability.splunk.com/en_us/infrastructure-monitoring.html) account and its
+      associated [ingest Token](https://dev.splunk.com/observability/docs/administration/authtokens/#Organization-access-tokens)
+    * OR a [Datadog](https://www.datadoghq.com/) account and its associated API key
 
 
 ### Variables
@@ -28,13 +31,23 @@ If not set, use the `AzureWebJobsStorage` connection string.
 queries, will try to fetch it if empty. If not set, use the `AzureWebJobsStorage` connection string.
 * **QUERIES_STORAGE_TABLE_NAME** (optional, defaults to `LogQueries`): The name of the table in the Storage Account
 with the queries
-* **SFX_TOKEN** (required): The Splunk Observability token for metric sending
+* **METRICS_EXTRA_DIMENSIONS** (optional): Extra dimensions/tags to send along the metrics.
+    Example: `env=prod,dd_monitored=true`
+
+#### Metrics Backend Configuration (one backend required)
+
+##### Splunk Observability Configuration
+* **SFX_TOKEN** (required for Splunk): The Splunk Observability token for metric sending
 * **SFX_REALM** (optional, defaults to `eu0`): Splunk realm (region) to use for metric sending
+
+##### Datadog Configuration
+* **DD_API_KEY** (required for Datadog): The Datadog API key for metric sending
+* **DD_API_HOST** (optional, defaults to `https://api.datadoghq.eu`): Datadog API host
+
+#### Other Configuration
 * **LOG_ANALYTICS_WORKSPACE_GUID** (required): ID of the Log Analytics Workspace for Log Analytics queries
 * **SUBSCRIPTION_ID** (required): ID of the Subscription for Resource Graph queries
 * **LOG_LEVEL** (optional, defaults to `INFO`): Logging level
-* **SFX_EXTRA_DIMENSIONS** (optional): Extra dimensions to send to Splunk Observability.
-    Example: `env=prod,sfx_monitored=true`
 * **AZURE_CLIENT_ID** (optional): Azure Service Principal ID if Service Principal authentication is used
 * **AZURE_TENANT_ID** (optional): Azure Tenant ID if Service Principal authentication is used
 * **AZURE_CLIENT_SECRET** (optional): Azure Service Principal secret key if Service Principal authentication is used
@@ -43,22 +56,20 @@ with the queries
 ## How it works
 
 The function runs all the queries stored in the associated Table Storage every minute within the given
-Log Analytics Workspace and send the result to Splunk Observability.
+Log Analytics Workspace and sends the results to either Splunk Observability or Datadog, depending on the configuration.
 
 Each query specifies the value of the metric and its associated time. Every column in the query is sent as metric
-dimension along with the defined `EXTRA_DIMENSIONS` variable.
-
+dimension along with the defined extra dimensions.
 
 ### Table storage format
 
 The records in the Table Storage must have the following columns:
-* **MetricName**: Name of the metric to send to Splunk Observability
-* **MetricType**: Type of metric, can be gauge, counter or cumulative_counter
-    (See [https://docs.signalfx.com/en/latest/metrics-metadata/metric-types.html](https://docs.signalfx.com/en/latest/metrics-metadata/metric-types.html))
+* **MetricName**: Name of the metric to send to the configured backend (Splunk Observability or Datadog)
 * **Query**: Query to run either on the Log Analytics Workspace or the Azure Resource Graph
     (See [https://docs.microsoft.com/en-us/azure/azure-monitor/logs/get-started-queries](https://docs.microsoft.com/en-us/azure/azure-monitor/logs/get-started-queries))
-* **QueryTye**: Type of Query to run. Can be `log_analytics` (default) or `resource_graph`.
+* **QueryType**: Type of Query to run. Can be `log_analytics` (default) or `resource_graph`.
     (See [https://docs.microsoft.com/en-us/azure/azure-monitor/logs/get-started-queries](https://docs.microsoft.com/en-us/azure/azure-monitor/logs/get-started-queries))
+
 
 
 ### Log queries requirements
