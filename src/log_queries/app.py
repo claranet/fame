@@ -56,7 +56,9 @@ def run_timer(timer: func.TimerRequest):
         logger.warning("The timer is past due!")
 
     utc_timestamp = (
-        datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).isoformat()
+        datetime.datetime.now(datetime.UTC)
+        .replace(tzinfo=datetime.timezone.utc)
+        .isoformat()
     )
 
     logger.info(f"Python timer trigger function ran at {utc_timestamp}")
@@ -117,14 +119,10 @@ def run():
     )
     queries_config = []
     for data in table_client.query_entities(""):
-        if (
-            not data.get("MetricName", False)
-            or not data.get("MetricType", False)
-            or not data.get("Query", False)
-        ):
+        if not data.get("MetricName", False) or not data.get("Query", False):
             raise ValueError(
                 f"Table {table_name} does not contain columns "
-                f'"MetricName", "MetricType" and "Query',
+                f'"MetricName" and "Query',
             )
         queries_config.append(data)
 
@@ -134,7 +132,6 @@ def run():
         metric_name = None
         try:
             metric_name = query_data.get("MetricName")
-            metric_type = query_data.get("MetricType")
             query_type = query_data.get("QueryType", LOG_ANALYTICS_QUERY_TYPE)
             logger.info(f"Querying and sending metric {metric_name}")
 
@@ -196,7 +193,7 @@ def run():
                     f"Metric {metric_name} dimensions: {metric_dimensions}",
                 )
 
-            metrics_sender.send_metrics(metric_name, metric_type, values)
+            metrics_sender.send_metrics(metric_name, values)
             logger.info(f"Metric {metric_name} successfully sent")
         except log_analytics.LogAnalyticsException:
             logger.exception(

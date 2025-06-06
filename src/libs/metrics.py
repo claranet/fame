@@ -22,22 +22,18 @@ def get_metrics_sender() -> "MetricsSender":
     """
     # Check for Datadog configuration
     dd_api_key = os.environ.get("DD_API_KEY")
-    dd_app_key = os.environ.get("DD_APP_KEY")
     dd_api_host = os.environ.get("DD_API_HOST")
 
     # Check for SignalFx configuration
     sfx_token = os.environ.get("SFX_TOKEN")
-    sfx_realm = os.environ.get("SFX_REALM", "eu0")
+    sfx_realm = os.environ.get("SFX_REALM")
 
     # Prioritize Datadog if both are available
     if dd_api_key:
         logger.info("Using Datadog metrics sender")
         dd_config = {"api_key": dd_api_key}
-        if dd_app_key:
-            dd_config["app_key"] = dd_app_key
         if dd_api_host:
             dd_config["api_host"] = dd_api_host
-
         return DatadogMetricsSender(**dd_config)
     elif sfx_token:
         logger.info("Using SignalFx metrics sender")
@@ -69,13 +65,12 @@ class MetricsSender(ABC):
 
     @abstractmethod
     def send_metrics(
-        self, name: str, type: str, values: List[Tuple[datetime, float, Dict[str, str]]]
+        self, name: str, values: List[Tuple[datetime, float, Dict[str, str]]]
     ) -> None:
         """
         Send metrics to the backend.
 
         :param name: Name of the metric
-        :param type: Type of metric (gauge, counter, cumulative_counter)
         :param values: List of timestamp, value and dimensions tuples
         :return: None
         """
@@ -99,43 +94,32 @@ class DatadogMetricsSender(MetricsSender):
     def __init__(
         self,
         api_key: str,
-        app_key: str = None,
         api_host: str = "https://api.datadoghq.eu",
     ):
         """
         Initialize the Datadog metrics sender with configuration.
 
         :param api_key: Datadog API key
-        :param app_key: Datadog application key (optional)
         :param api_host: Datadog API host (optional, default: 'https://api.datadoghq.eu')
         """
         if not api_key:
             raise ValueError("Datadog API key is required")
 
         self.api_key = api_key
-        self.app_key = app_key
         self.api_host = api_host
 
         logger.info(f"Initializing Datadog metrics sender with host: {self.api_host}")
 
         # Initialize the Datadog client
-        options = {
-            "api_key": self.api_key,
-            "api_host": self.api_host,
-        }
-        if self.app_key:
-            options["app_key"] = self.app_key
-
-        datadog.initialize(**options)
+        datadog.initialize(api_key=self.api_key, api_host=self.api_host)
 
     def send_metrics(
-        self, name: str, type: str, values: List[Tuple[datetime, float, Dict[str, str]]]
+        self, name: str, values: List[Tuple[datetime, float, Dict[str, str]]]
     ) -> None:
         """
         Send metrics to the Datadog.
 
         :param name: Name of the metric
-        :param type: Type of metric (gauge, counter, cumulative_counter)
         :param values: List of timestamp, value and dimensions tuples
         :return: None
         """
@@ -154,28 +138,17 @@ class DatadogMetricsSender(MetricsSender):
                 }
             metrics_by_dimensions[dim_key]["points"].append((dt.timestamp(), value))
 
-        # Send metrics in batches by dimension
+        # Send metrics to Datadog
         for batch in metrics_by_dimensions.values():
             datadog.api.Metric.send(
                 metric=name,
                 points=batch["points"],
-                type=self._map_metric_type(type),
+                type="gauge",
                 tags=[f"{k}:{v}" for k, v in batch["dimensions"].items()],
             )
         logger.info(
             f"Sent {name} metrics to Datadog",
         )
-
-    @staticmethod
-    def _map_metric_type(metric_type: str) -> str:
-        """
-        Map SignalFx metric types to Datadog metric types.
-
-        :param metric_type: SignalFx metric type
-        :return: Datadog metric type
-        """
-        mapping = {"gauge": "gauge", "counter": "count", "cumulative_counter": "count"}
-        return mapping.get(metric_type, "gauge")
 
     def close(self) -> None:
         """
@@ -215,15 +188,13 @@ class SignalFxMetricsSender(MetricsSender):
         atexit.register(self.close)
 
     def send_metrics(
-        self, name: str, type: str, values: List[Tuple[datetime, float, Dict[str, str]]]
+        self, name: str, values: List[Tuple[datetime, float, Dict[str, str]]]
     ) -> None:
         """
         Send metrics to the SignalFx.
 
         :param name: Name of the metric
-        :param type: Type of metric (gauge, counter, cumulative_counter)
         :param values: List of timestamp and value tuples
-        :param dimensions: Dictionary of dimensions (tags) to associate with the metric
         :return: None
         """
         if not values:
@@ -241,7 +212,7 @@ class SignalFxMetricsSender(MetricsSender):
                 }
             )
 
-        self.ingest.send(**{f"{type}s": sfx_metrics})
+        self.ingest.send(gauges=sfx_metrics)
         logger.info(
             f"Sent {len(name)} metrics to SignalFx",
         )

@@ -120,16 +120,16 @@ metrics_sender = get_metrics_sender()
 
 # Create metrics data
 metrics_data = [
-   {
-      "metric": "my.metric.name",
-      "value": 42,
-      "timestamp": 1622547600000,  # Milliseconds since epoch
-      "dimensions": {"host": "my-host", "service": "my-service"}
-   }
+    {
+        "metric": "my.metric.name",
+        "value": 42,
+        "timestamp": 1622547600000,  # Milliseconds since epoch
+        "dimensions": {"host": "my-host", "service": "my-service"}
+    }
 ]
 
 # Send metrics as a gauge
-metrics_sender.send_metrics(metrics_data, "", "", "")
+metrics_sender.send_metrics(metrics_data, "")
 
 # Don't forget to close the connection when done
 metrics_sender.close()
@@ -173,31 +173,31 @@ from libs.metrics import get_metrics_sender
 
 
 def main(context):
-   # Initialize the metrics sender
-   try:
-      metrics_sender = get_metrics_sender()
-   except ValueError as e:
-      logging.error(f"Failed to initialize metrics sender: {e}")
-      return
+    # Initialize the metrics sender
+    try:
+        metrics_sender = get_metrics_sender()
+    except ValueError as e:
+        logging.error(f"Failed to initialize metrics sender: {e}")
+        return
 
-   # Create metrics data
-   metrics_data = [
-      {
-         "metric": "azure.function.invocation",
-         "value": 1,
-         "timestamp": int(context.timestamp.timestamp() * 1000),
-         "dimensions": {
-            "function_name": context.function_name,
-            "invocation_id": context.invocation_id
-         }
-      }
-   ]
+    # Create metrics data
+    metrics_data = [
+        {
+            "metric": "azure.function.invocation",
+            "value": 1,
+            "timestamp": int(context.timestamp.timestamp() * 1000),
+            "dimensions": {
+                "function_name": context.function_name,
+                "invocation_id": context.invocation_id
+            }
+        }
+    ]
 
-   # Send metrics
-   metrics_sender.send_metrics(metrics_data, "", "", "")
+    # Send metrics
+    metrics_sender.send_metrics(metrics_data, "")
 
-   # Close the metrics sender
-   metrics_sender.close()
+    # Close the metrics sender
+    metrics_sender.close()
 ```
 
 ## Migration Guide
@@ -237,7 +237,7 @@ os.environ["SFX_EXTRA_DIMENSIONS"] = "env=prod,service=my-service"
 metrics_sender = get_metrics_sender()
 
 # Send metrics
-metrics_sender.send_metrics(metrics_data, "", "", "")
+metrics_sender.send_metrics(metrics_data, "")
 
 # Close connection
 metrics_sender.close()
@@ -258,7 +258,7 @@ os.environ["DD_API_HOST"] = "https://api.datadoghq.eu"  # Optional
 metrics_sender = get_metrics_sender()
 
 # Send metrics (same interface)
-metrics_sender.send_metrics(metrics_data, "", "", "")
+metrics_sender.send_metrics(metrics_data, "")
 
 # Close connection (same interface)
 metrics_sender.close()
