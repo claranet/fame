@@ -121,8 +121,7 @@ def run():
     for data in table_client.query_entities(""):
         if not data.get("MetricName", False) or not data.get("Query", False):
             raise ValueError(
-                f"Table {table_name} does not contain columns "
-                f'"MetricName" and "Query',
+                f'Table {table_name} does not contain columns "MetricName" and "Query',
             )
         queries_config.append(data)
 
