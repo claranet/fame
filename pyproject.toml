@@ -8,21 +8,22 @@ package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.12"
-azure-data-tables = "^12.0.0b7"
-azure-functions = "^1.7.0"
-azure-identity = "^1.5.0"
-azure-loganalytics = "^0.1.0"
-python-dateutil = "^2.8.1"
-requests = "^2.25.1"
-signalfx = "^1.1.13"
-cryptography = "^44.0.1"
-cffi = "^1.16.0"
+azure-data-tables = "^12.7.0"
+azure-functions = "^1.23.0"
+azure-identity = "^1.23.0"
+azure-loganalytics = "^0.1.1"
+cffi = "^1.17.1"
+cryptography = "^45.0.3"
+datadog =  "^0.51.0"
+python-dateutil = "^2.9.0"
+requests = "^2.32.3"
+signalfx = "^1.1.16"
 
 [tool.poetry.group.dev.dependencies]
-ruff = "^0.4.0"
+ruff = "^0.11.13"
 pyright = "^1.1.335"
-pytest = "^8.1.1"
-tox = "^4.14.2"
+pytest = "^8.4.0"
+tox = "^4.26.0"
 
 [tool.poetry.scripts]
 fame = 'fame.main:main'
