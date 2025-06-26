@@ -4,6 +4,7 @@ Log queries function.
 Azure Function App function for running queries along a Log Analytics Workspace or Resource Graph
 and send the result to Splunk Observability.
 """
+
 import atexit
 import datetime
 import logging
@@ -104,7 +105,7 @@ def run():
         if not storage_connection_string:
             raise ValueError(
                 "Either QUERIES_STORAGE_ACCOUNT_NAME and QUERIES_STORAGE_ACCOUNT_KEY or "
-                "AzureWebJobsStorage environment variables must be set"
+                "AzureWebJobsStorage environment variables must be set",
             )
     else:
         storage_connection_string = (
@@ -115,7 +116,8 @@ def run():
 
     table_name = os.getenv("QUERIES_STORAGE_TABLE_NAME") or "LogQueries"
     table_client = TableClient.from_connection_string(
-        storage_connection_string, table_name=table_name
+        storage_connection_string,
+        table_name=table_name,
     )
     queries_config = []
     for data in table_client.query_entities(""):
@@ -126,7 +128,7 @@ def run():
         ):
             raise ValueError(
                 f"Table {table_name} does not contain columns "
-                f'"MetricName", "MetricType" and "Query'
+                f'"MetricName", "MetricType" and "Query',
             )
         queries_config.append(data)
 
@@ -148,19 +150,23 @@ def run():
                 logger.info(f"Querying and sending metric {metric_name}")
 
                 logger.debug(
-                    f"Executing query {query_data['Query']} for metric {metric_name}"
+                    f"Executing query {query_data['Query']} for metric {metric_name}",
                 )
                 if query_type == RESOURCE_GRAPH_QUERY_TYPE:
                     data = resource_graph.run_query(
-                        query_data["Query"], subscription_id, creds
+                        query_data["Query"],
+                        subscription_id,
+                        creds,
                     )
                 elif query_type == LOG_ANALYTICS_QUERY_TYPE:
                     data = log_analytics.run_query(
-                        query_data["Query"], log_analytics_workspace_id, creds
+                        query_data["Query"],
+                        log_analytics_workspace_id,
+                        creds,
                     )
                 else:
                     logger.error(
-                        f"Unknown query type {query_type} for metric {metric_name}"
+                        f"Unknown query type {query_type} for metric {metric_name}",
                     )
                     continue
 
@@ -173,11 +179,11 @@ def run():
                 if not ("timestamp" in dimensions and "metric_value" in dimensions):
                     logger.error(
                         f'Columns "timestamp" and "metric_value" do not exist '
-                        f"in the query results for metric {metric_name}"
+                        f"in the query results for metric {metric_name}",
                     )
                     continue
                 logger.debug(
-                    f"Found `timestamp` and `metric_value` columns for metric {metric_name}"
+                    f"Found `timestamp` and `metric_value` columns for metric {metric_name}",
                 )
 
                 # Remove timestamp & metrics_value from dimensions
@@ -200,29 +206,29 @@ def run():
                             "value": metric_value,
                             "timestamp": parse(timestamp).timestamp() * 1000,
                             "dimensions": metric_dimensions,
-                        }
+                        },
                     )
                     logger.debug(
-                        f"Metric {metric_name} time: {parse(timestamp).isoformat()}"
+                        f"Metric {metric_name} time: {parse(timestamp).isoformat()}",
                     )
                     logger.debug(f"Metric {metric_name} value: {metric_value}")
                     logger.debug(
-                        f"Metric {metric_name} dimensions: {metric_dimensions}"
+                        f"Metric {metric_name} dimensions: {metric_dimensions}",
                     )
 
                 sfx.send(**{f"{sfx_metric_type}s": sfx_values})
                 logger.info(f"Metric {metric_name} successfully sent")
             except log_analytics.LogAnalyticsException:
                 logger.exception(
-                    f"Error while running Log Analytics query for {metric_name}"
+                    f"Error while running Log Analytics query for {metric_name}",
                 )
             except resource_graph.ResourceGraphException:
                 logger.exception(
-                    f"Error while running Resource Graph query for {metric_name}"
+                    f"Error while running Resource Graph query for {metric_name}",
                 )
             except:  # noqa E722
                 logger.exception(
-                    f"Unexpected exception when treating query {metric_name or query_data}"
+                    f"Unexpected exception when treating query {metric_name or query_data}",
                 )
 
 

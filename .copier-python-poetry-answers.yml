@@ -1,0 +1,12 @@
+# Changes here will be overwritten by Copier; NEVER EDIT MANUALLY
+_commit: v0.6.3
+_src_path: git@git.fr.clara.net:claranet/guildes/pipeline/python-templates/python-poetry-project-template.git
+author_email: do-not-reply@claranet.com
+author_name: Claranet
+git_default_branch: master
+project_description: Fame - Function for Azure Monitoring Extension
+project_name: fame
+project_slug: fame
+project_type: script
+publish_pypi_package: false
+renovate_automerge_enabled: false

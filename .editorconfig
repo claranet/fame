@@ -1,0 +1,40 @@
+# EditorConfig helps developers define and maintain consistent
+# coding styles between different editors and IDEs
+# editorconfig.org
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_size = 4
+indent_style = space
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.hcl]
+indent_size = 2
+
+[*.json]
+indent_size = 2
+
+[*.md]
+# double whitespace at end of line
+# denotes a line break in Markdown
+trim_trailing_whitespace = false
+
+[*.tf]
+indent_size = 2
+
+[*.{yaml,yml}]
+indent_size = 2
+
+[.ecrc]
+indent_size = 2
+
+[.releaserc]
+indent_size = 2
+
+[Makefile]
+indent_style = tab
+tab_width = 4

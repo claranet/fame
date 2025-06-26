@@ -1,18 +1,9 @@
 variables:
-  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
-
-cache:
-  key: .gitlab-cache-pip
-  paths:
-    - .cache/pip
-
-stages:
-  - lint
-
-lint:
-  stage: lint
-  image: python:3.8
-  script:
-    - python -V
-    - pip3 install tox
-    - tox -e lint
+  KUBERNETES_CPU_REQUEST: "1"
+  KUBERNETES_MEMORY_LIMIT: "2Gi"
+  KUBERNETES_MEMORY_REQUEST: "2Gi"
+include:
+  - project: claranet/guildes/pipeline/python-templates/python-gitlab-ci-templates
+    ref: v0.14.0
+    file: poetry.yml
+  - local: .gitlab-ci.custom.yml
