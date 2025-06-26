@@ -1,6 +1,7 @@
 {
   "branches": [
-    "master"
+    "master",
+    "main"
   ],
   "tagFormat": "v${version}",
   "plugins": [
@@ -24,6 +25,10 @@
           {
             "type": "style",
             "release": "patch"
+          },
+          {
+            "type": "revert",
+            "release": "patch"
           }
         ],
         "parserOpts": {
@@ -38,6 +43,8 @@
     [
       "@semantic-release/release-notes-generator",
       {
+        "linkReferences": false,
+        "linkCompare": false,
         "preset": "conventionalcommits",
         "parserOpts": {
           "noteKeywords": [
@@ -92,6 +99,11 @@
               "type": "chore",
               "section": "Miscellaneous Chores",
               "hidden": false
+            },
+            {
+              "type": "revert",
+              "section": "Revert",
+              "hidden": false
             }
           ]
         }
@@ -117,7 +129,7 @@
           "CHANGELOG.md",
           "pyproject.toml"
         ],
-        "message": "chore(release): ${nextRelease.version}\n\n${nextRelease.notes}[skip ci]"
+        "message": "chore(release): ${nextRelease.version}\n\n${nextRelease.notes}"
       }
     ],
     [
