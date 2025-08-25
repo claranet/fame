@@ -1,3 +1,13 @@
+## 2.0.1 (2025-08-25)
+
+### Bug Fixes
+
+* **deps:** update dependency cryptography to v45.0.6 884a7c0
+
+### Miscellaneous Chores
+
+* **deps:** update dependency pyright to v1.1.404 7e6e12c
+
 ## 2.0.0 (2025-06-27)
 
 ### ⚠ BREAKING CHANGES
