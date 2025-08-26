@@ -1,3 +1,9 @@
+## 2.0.2 (2025-08-26)
+
+### Bug Fixes
+
+* **deps:** update dependency requests to v2.32.5 7a71586
+
 ## 2.0.1 (2025-08-25)
 
 ### Bug Fixes
