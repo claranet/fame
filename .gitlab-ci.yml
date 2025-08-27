@@ -4,6 +4,6 @@ variables:
   KUBERNETES_MEMORY_REQUEST: "2Gi"
 include:
   - project: claranet/guildes/pipeline/python-templates/python-gitlab-ci-templates
-    ref: v0.14.0
+    ref: v0.18.0
     file: poetry.yml
   - local: .gitlab-ci.custom.yml
