@@ -99,10 +99,16 @@ class DatadogMetricsSender(MetricsSender):
         self.api_key = api_key
         self.api_host = api_host
 
-        logger.debug(f"Initializing Datadog metrics sender with host: {self.api_host}")
+        try:
+            logger.debug(
+                f"Initializing Datadog metrics sender with host: {self.api_host}"
+            )
 
-        # Initialize the Datadog client
-        datadog.initialize(api_key=self.api_key, api_host=self.api_host)
+            # Initialize the Datadog client
+            datadog.initialize(api_key=self.api_key, api_host=self.api_host)
+        except Exception:
+            logger.exception("Failed to initialize Datadog client")
+            raise
 
     def send_metrics(
         self, name: str, values: List[Tuple[datetime, float, Dict[str, str]]]
@@ -134,12 +140,16 @@ class DatadogMetricsSender(MetricsSender):
             logger.debug(
                 f"Sending metric {name} with points {batch['points']} and dimensions {batch['dimensions']}"
             )
-            datadog.api.Metric.send(
-                metric=name,
-                points=batch["points"],
-                type="gauge",
-                tags=[f"{k}:{v}" for k, v in batch["dimensions"].items()],
-            )
+            try:
+                datadog.api.Metric.send(
+                    metric=name,
+                    points=batch["points"],
+                    type="gauge",
+                    tags=[f"{k}:{v}" for k, v in batch["dimensions"].items()],
+                )
+            except Exception:
+                logger.exception("Failed to send metrics to Datadog")
+                raise
         logger.info(f"Sent {name} metrics to Datadog")
 
 
@@ -193,9 +203,15 @@ class SignalFxMetricsSender(MetricsSender):
                 }
             )
 
-        res = requests.post(
-            self.url, headers=self.http_headers, data=json.dumps({"gauge": sfx_metrics})
-        )
-        res.raise_for_status()
+        try:
+            res = requests.post(
+                self.url,
+                headers=self.http_headers,
+                data=json.dumps({"gauge": sfx_metrics}),
+            )
+            res.raise_for_status()
+        except Exception:
+            logger.exception("Failed to send metrics to SignalFx")
+            raise
 
         logger.info(f"Sent {name} metrics to SignalFx")

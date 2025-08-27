@@ -207,9 +207,6 @@ def run():
                 f"Unexpected exception when treating query {metric_name or query_data}",
             )
 
-        # Close the metrics sender
-        metrics_sender.close()
-
 
 if __name__ == "__main__":
     run()
