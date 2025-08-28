@@ -4,3 +4,4 @@ variables:
   POETRY_TOX_LINT_ENABLED: "true"
   POETRY_TOX_TEST_ENABLED: "true"
   RELEASE_ENABLED: "true"
+  RELEASE_BRANCH: "master"
