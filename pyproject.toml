@@ -20,7 +20,7 @@ requests = "^2.32.3"
 signalfx = "^1.1.16"
 
 [tool.poetry.group.dev.dependencies]
-ruff = "^0.11.13"
+ruff = "^0.12.0"
 pyright = "^1.1.335"
 pytest = "^8.4.0"
 tox = "^4.26.0"
