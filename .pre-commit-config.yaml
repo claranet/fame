@@ -1,7 +1,7 @@
 default_install_hook_types: [commit-msg, pre-commit]
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
       - id: trailing-whitespace
         stages: [pre-commit]
@@ -25,13 +25,13 @@ repos:
         stages: [pre-commit]
 
   - repo: https://github.com/editorconfig-checker/editorconfig-checker.python
-    rev: 3.0.3
+    rev: 3.4.0
     hooks:
       - id: editorconfig-checker
         stages: [pre-commit]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.9.1
+    rev: v0.12.11
     hooks:
       - id: ruff
         stages: [pre-commit]
@@ -39,7 +39,7 @@ repos:
         stages: [pre-commit]
 
   - repo: https://github.com/asottile/add-trailing-comma
-    rev: v3.1.0
+    rev: v3.2.0
     hooks:
       - id: add-trailing-comma
         stages: [pre-commit]
@@ -51,13 +51,13 @@ repos:
 #        stages: [pre-commit]
 
   - repo: https://github.com/tox-dev/tox-ini-fmt
-    rev: "1.4.1"
+    rev: "1.6.0"
     hooks:
       - id: tox-ini-fmt
         stages: [pre-commit]
 
   - repo: https://github.com/compilerla/conventional-pre-commit
-    rev: v4.0.0
+    rev: v4.2.0
     hooks:
       - id: conventional-pre-commit
         stages: [commit-msg]

@@ -1,11 +1,11 @@
-import atexit
 from dataclasses import dataclass
 from datetime import datetime
 
 import datadog
+import json
 import logging
 import os
-import signalfx
+import requests
 from abc import ABC, abstractmethod
 from typing import List, Dict, Tuple
 
@@ -76,15 +76,6 @@ class MetricsSender(ABC):
         """
         pass
 
-    @abstractmethod
-    def close(self) -> None:
-        """
-        Close any connections and perform cleanup.
-
-        :return: None
-        """
-        pass
-
 
 class DatadogMetricsSender(MetricsSender):
     """
@@ -108,10 +99,16 @@ class DatadogMetricsSender(MetricsSender):
         self.api_key = api_key
         self.api_host = api_host
 
-        logger.info(f"Initializing Datadog metrics sender with host: {self.api_host}")
+        try:
+            logger.debug(
+                f"Initializing Datadog metrics sender with host: {self.api_host}"
+            )
 
-        # Initialize the Datadog client
-        datadog.initialize(api_key=self.api_key, api_host=self.api_host)
+            # Initialize the Datadog client
+            datadog.initialize(api_key=self.api_key, api_host=self.api_host)
+        except Exception:
+            logger.exception("Failed to initialize Datadog client")
+            raise
 
     def send_metrics(
         self, name: str, values: List[Tuple[datetime, float, Dict[str, str]]]
@@ -124,7 +121,7 @@ class DatadogMetricsSender(MetricsSender):
         :return: None
         """
         if not values:
-            logger.warning("No metrics data to send")
+            logger.warning(f"No metrics data to send for {name}")
             return
 
         # Group metrics by dimensions to minimize API calls
@@ -140,24 +137,20 @@ class DatadogMetricsSender(MetricsSender):
 
         # Send metrics to Datadog
         for batch in metrics_by_dimensions.values():
-            datadog.api.Metric.send(
-                metric=name,
-                points=batch["points"],
-                type="gauge",
-                tags=[f"{k}:{v}" for k, v in batch["dimensions"].items()],
+            logger.debug(
+                f"Sending metric {name} with points {batch['points']} and dimensions {batch['dimensions']}"
             )
-        logger.info(
-            f"Sent {name} metrics to Datadog",
-        )
-
-    def close(self) -> None:
-        """
-        Close the Datadog client connection.
-
-        :return: None
-        """
-        # Datadog Python client doesn't require explicit closing
-        logger.info("Datadog client connection closed")
+            try:
+                datadog.api.Metric.send(
+                    metric=name,
+                    points=batch["points"],
+                    type="gauge",
+                    tags=[f"{k}:{v}" for k, v in batch["dimensions"].items()],
+                )
+            except Exception:
+                logger.exception("Failed to send metrics to Datadog")
+                raise
+        logger.info(f"Sent {name} metrics to Datadog")
 
 
 class SignalFxMetricsSender(MetricsSender):
@@ -172,20 +165,15 @@ class SignalFxMetricsSender(MetricsSender):
         :param token: SignalFx access token
         :param realm: SignalFx realm (default: 'eu0')
         """
+        logger.info(f"Initializing SignalFx metrics sender with realm: {realm}")
         if not token:
             raise ValueError("SignalFx token is required")
-        self.token = token
-        self.realm = realm
 
-        logger.info(f"Initializing SignalFx metrics sender with realm: {self.realm}")
-
-        self.sfx_client = signalfx.SignalFx(
-            api_endpoint=f"https://api.{self.realm}.signalfx.com",
-            ingest_endpoint=f"https://ingest.{self.realm}.signalfx.com",
-            stream_endpoint=f"https://stream.{self.realm}.signalfx.com",
-        )
-        self.ingest = self.sfx_client.ingest(self.token)
-        atexit.register(self.close)
+        self.url = f"https://ingest.{realm}.signalfx.com/v2/datapoint"
+        self.http_headers = {
+            "Content-Type": "application/json",
+            "X-SF-TOKEN": token,
+        }
 
     def send_metrics(
         self, name: str, values: List[Tuple[datetime, float, Dict[str, str]]]
@@ -198,11 +186,14 @@ class SignalFxMetricsSender(MetricsSender):
         :return: None
         """
         if not values:
-            logger.warning("No metrics data to send")
+            logger.warning(f"No metrics data to send for {name}")
             return
 
         sfx_metrics = []
         for dt, v, dim in values:
+            logger.debug(
+                f"Sending metric {name} with value {v} at {dt} and dimensions {dim}"
+            )
             sfx_metrics.append(
                 {
                     "metric": name,
@@ -212,17 +203,15 @@ class SignalFxMetricsSender(MetricsSender):
                 }
             )
 
-        self.ingest.send(gauges=sfx_metrics)
-        logger.info(
-            f"Sent {len(name)} metrics to SignalFx",
-        )
+        try:
+            res = requests.post(
+                self.url,
+                headers=self.http_headers,
+                data=json.dumps({"gauge": sfx_metrics}),
+            )
+            res.raise_for_status()
+        except Exception:
+            logger.exception("Failed to send metrics to SignalFx")
+            raise
 
-    def close(self) -> None:
-        """
-        Close the SignalFx client connection.
-
-        :return: None
-        """
-        if hasattr(self, "ingest") and self.ingest:
-            self.ingest.stop()
-            logger.info("SignalFx client connection closed")
+        logger.info(f"Sent {name} metrics to SignalFx")
