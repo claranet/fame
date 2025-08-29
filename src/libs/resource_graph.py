@@ -1,6 +1,10 @@
 """Azure Resource Graph management."""
 
+import logging
+
 import requests
+
+logger = logging.getLogger("log_queries")
 
 
 class ResourceGraphException(Exception):
@@ -30,6 +34,9 @@ def run_query(query, subscription_id, credentials):
     result = requests.post(url, json=params, headers=query_headers)
 
     if result.status_code != 200:
+        logger.error(
+            f"Error while querying Resource Graph: {result.status_code} - {result.text}"
+        )
         try:
             message = result.json()["error"]["message"]
         except:  # noqa E722

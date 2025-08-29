@@ -17,7 +17,6 @@ cryptography = "^45.0.3"
 datadog =  "^0.52.0"
 python-dateutil = "^2.9.0"
 requests = "^2.32.3"
-signalfx = "^1.1.16"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.12.0"
