@@ -1,3 +1,36 @@
+## 2.0.3 (2025-08-29)
+
+### Bug Fixes
+
+* **deps:** update dependency azure-identity to v1.24.0 8c4379d
+* **deps:** update dependency datadog to ^0.52.0 938cd1d
+
+### Code Refactoring
+
+* **metrics:** replace SignalFx lib by api calls bb40990
+
+### Continuous Integration
+
+* update release config 2e3994e
+
+### Miscellaneous Chores
+
+* **deps:** update actions/checkout action to v5 0cd43f2
+* **deps:** update actions/setup-python action to v5 aef4512
+* **deps:** update dependency claranet/guildes/pipeline/python-templates/python-gitlab-ci-templates to v0.18.0 9a74caa
+* **deps:** update dependency pre-commit to v4.3.0 216a319
+* **deps:** update dependency pytest to v8.4.1 00374cb
+* **deps:** update dependency ruff to ^0.12.0 231aafe
+* **deps:** update dependency tox to v4.28.4 a9828fe
+* **deps:** update pre-commit hook asottile/add-trailing-comma to v3.2.0 f810bbc
+* **deps:** update pre-commit hook astral-sh/ruff-pre-commit to v0.12.10 ddbcdd4
+* **deps:** update pre-commit hook astral-sh/ruff-pre-commit to v0.12.11 dcdcc22
+* **deps:** update pre-commit hook compilerla/conventional-pre-commit to v4.2.0 e357133
+* **deps:** update pre-commit hook editorconfig-checker/editorconfig-checker.python to v3.4.0 5b89c80
+* **deps:** update pre-commit hook pre-commit/pre-commit-hooks to v6 2012daf
+* **deps:** update pre-commit hook tox-dev/tox-ini-fmt to v1.6.0 cd711fb
+* improve logging and exception handling 0848f00
+
 ## 2.0.2 (2025-08-26)
 
 ### Bug Fixes
