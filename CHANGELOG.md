@@ -1,3 +1,13 @@
+## 2.0.4 (2025-09-02)
+
+### Bug Fixes
+
+* **deps:** update dependency cryptography to v45.0.7 2964376
+
+### Miscellaneous Chores
+
+* **deps:** update dependency tox to v4.29.0 8f00528
+
 ## 2.0.3 (2025-08-29)
 
 ### Bug Fixes
