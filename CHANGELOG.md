@@ -1,3 +1,26 @@
+## 2.0.5 (2025-11-06)
+
+### Bug Fixes
+
+* **deps:** update dependency cffi to v2 77b550e
+* **deps:** update dependency cryptography to v46 8269cc3
+
+### Miscellaneous Chores
+
+* **deps:** bump extension bundle version to [4.0.0, 5.0.0) 4af8908
+* **deps:** update actions/setup-python action to v6 05f4a38
+* **deps:** update dependency azure-functions to v1.24.0 c950409
+* **deps:** update dependency azure-identity to v1.25.0 2a12d8e
+* **deps:** update dependency azure-identity to v1.25.1 75f47b0
+* **deps:** update dependency pyright to v1.1.405 5d5fd23
+* **deps:** update dependency pyright to v1.1.406 0965f42
+* **deps:** update dependency pytest to v8.4.2 8dbd9a1
+* **deps:** update dependency ruff to ^0.13.0 c45d553
+* **deps:** update dependency ruff to v0.12.12 8e5298f
+* **deps:** update dependency tox to v4.30.2 731a27c
+* **deps:** update pre-commit hook astral-sh/ruff-pre-commit to v0.12.12 9f29a05
+* **deps:** update pre-commit hook astral-sh/ruff-pre-commit to v0.13.0 9d41886
+
 ## 2.0.4 (2025-09-02)
 
 ### Bug Fixes
