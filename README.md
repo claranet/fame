@@ -58,8 +58,10 @@ with the queries
 The function runs all the queries stored in the associated Table Storage every minute within the given
 Log Analytics Workspace and sends the results to either Splunk Observability or Datadog, depending on the configuration.
 
-Each query specifies the value of the metric and its associated time. Every column in the query is sent as metric
-dimension along with the defined extra dimensions.
+Each query defines the metric value and its corresponding timestamp. All columns in the query are included as metric 
+dimensions, along with any extra dimensions specified through `METRICS_EXTRA_DIMENSIONS` variable. Additionally, 
+if available, the dimensions `fame_function_app_name`, `fame_function_app_resource_group`, and `fame_function_app_subscription_id` 
+are added to each metric sent.
 
 ### Table storage format
 
@@ -74,10 +76,11 @@ The records in the Table Storage must have the following columns:
 
 ### Log queries requirements
 
-The query must contain the columns `metric_value` with a metric value and `timestamp` with the datetime of the metric to send.
-The others columns must be strings and are treated as dimensions for the metric.
+The query must contain the columns `metric_value` with a metric value and `timestamp` with the datetime of the metric 
+to send. The other columns must be strings and are treated as dimensions for the metric.
 
-For Log Analytics queries, you must specify a time range in your query to avoid retrieving and sending a huge amount of data.
+For Log Analytics queries, you must specify a time range in your query to avoid retrieving and sending a huge amount 
+of data.
 
 ## How to deploy
 
