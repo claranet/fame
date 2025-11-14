@@ -1,3 +1,20 @@
+## 2.1.0 (2025-11-14)
+
+### Features
+
+* **metrics:** add extra dimension for function app b1e9a94
+* **metrics:** add extra dimension for function app 2860188
+
+### Miscellaneous Chores
+
+* **deps:** update dependency claranet/guildes/pipeline/python-templates/python-gitlab-ci-templates to v0.20.1 947eb15
+* **deps:** update dependency pre-commit to v4.4.0 2260a16
+* **deps:** update dependency pyright to v1.1.407 8169118
+* **deps:** update dependency pytest to v9 9779268
+* **deps:** update dependency ruff to ^0.14.0 afe9646
+* **deps:** update dependency ruff to v0.14.5 7c05dab
+* **deps:** update pre-commit hook editorconfig-checker/editorconfig-checker.python to v3.4.1 529f9a5
+
 ## 2.0.5 (2025-11-06)
 
 ### Bug Fixes
